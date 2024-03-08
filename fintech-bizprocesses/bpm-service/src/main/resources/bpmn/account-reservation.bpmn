@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1w4jtu1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="2.0.3">
+  <bpmn:process id="ReserveAccaunt" name="Бронирование счета" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_1jmuzmt</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1jmuzmt" sourceRef="StartEvent_1" targetRef="Task_0orlwyu" />
+    <bpmn:endEvent id="EndEvent_04mfyry">
+      <bpmn:incoming>SequenceFlow_10zgh06</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1v51j4k</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Task_0orlwyu" name="Регистрация заявки" camunda:expression="${accountReservationService.registerRequest(execution)}">
+      <bpmn:incoming>SequenceFlow_1jmuzmt</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_045qm6b</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0di1p1w</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0di1p1w" sourceRef="Task_0orlwyu" targetRef="resAccCallProcTask" />
+    <bpmn:serviceTask id="resAccCallProcTask" name="Бронирование счета в Colvir" camunda:expression="${accountReservationService.reserveAccount(execution)}">
+      <bpmn:incoming>SequenceFlow_0di1p1w</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0ojuflc</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_16rso8v</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0j1pnna</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_16rso8v" sourceRef="resAccCallProcTask" targetRef="Task_0fkk5p2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='ACCEPT'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="Task_0fkk5p2" name="Отправка уведомления пользователю" camunda:expression="${accountReservationService.sendClientNotification(execution)}">
+      <bpmn:incoming>SequenceFlow_16rso8v</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0cr4150</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1u60l03</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="BoundaryEvent_0k277x8" attachedToRef="Task_0orlwyu">
+      <bpmn:outgoing>SequenceFlow_142vltl</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="Error_18zv97k" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_142vltl" sourceRef="BoundaryEvent_0k277x8" targetRef="Task_13jk4lo" />
+    <bpmn:userTask id="Task_13jk4lo" name="Обработка ошибок" camunda:formKey="/accounts/forms/error" camunda:candidateGroups="RESERVE_ACCOUNT_ADMIN">
+      <bpmn:incoming>SequenceFlow_142vltl</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_045qm6b</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_137m3ln</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_045qm6b" sourceRef="Task_13jk4lo" targetRef="Task_0orlwyu">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:intermediateCatchEvent id="declineRequestLink" name="declineRequest">
+      <bpmn:outgoing>SequenceFlow_16b267g</bpmn:outgoing>
+      <bpmn:linkEventDefinition name="declineRequest" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_16b267g" sourceRef="declineRequestLink" targetRef="Task_0k546w0" />
+    <bpmn:endEvent id="EndEvent_1d84ukc">
+      <bpmn:incoming>SequenceFlow_1lwvysk</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1lwvysk" sourceRef="Task_0k546w0" targetRef="EndEvent_1d84ukc" />
+    <bpmn:serviceTask id="Task_0k546w0" name="Отправка уведомления об отказе в бронировании счета" camunda:expression="${accountReservationService.sendClientDeclined(execution)}">
+      <bpmn:incoming>SequenceFlow_16b267g</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1lwvysk</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_137m3ln" sourceRef="Task_13jk4lo" targetRef="declineRequestThrow">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:intermediateThrowEvent id="declineRequestThrow" name="Отклонить бронирование&#10;&#10;">
+      <bpmn:incoming>SequenceFlow_137m3ln</bpmn:incoming>
+      <bpmn:linkEventDefinition name="declineRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_1wxpkph" attachedToRef="resAccCallProcTask">
+      <bpmn:outgoing>SequenceFlow_0wtrrr5</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="Error_18zv97k" />
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_0ohasnh" attachedToRef="Task_0fkk5p2">
+      <bpmn:outgoing>SequenceFlow_0zjmpzh</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="Error_18zv97k" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="tocanel" sourceRef="Task_1ods1fe" targetRef="IntermediateThrowEvent_1okoecw">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0wtrrr5" sourceRef="BoundaryEvent_1wxpkph" targetRef="Task_1ods1fe" />
+    <bpmn:sequenceFlow id="SequenceFlow_0ojuflc" sourceRef="Task_1ods1fe" targetRef="resAccCallProcTask">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="Task_1ods1fe" name="Обработка ошибок" camunda:formKey="/accounts/forms/error" camunda:candidateGroups="RESERVE_ACCOUNT_ADMIN">
+      <bpmn:incoming>SequenceFlow_0wtrrr5</bpmn:incoming>
+      <bpmn:outgoing>tocanel</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0ojuflc</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1okoecw" name="Отклонить бронирование">
+      <bpmn:incoming>tocanel</bpmn:incoming>
+      <bpmn:linkEventDefinition name="declineRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0j1pnna" sourceRef="resAccCallProcTask" targetRef="IntermediateThrowEvent_1pzr2ig">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1pzr2ig" name="Отклонить бронирование">
+      <bpmn:incoming>SequenceFlow_0j1pnna</bpmn:incoming>
+      <bpmn:linkEventDefinition name="declineRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0zjmpzh" sourceRef="BoundaryEvent_0ohasnh" targetRef="Task_0b2yqy2" />
+    <bpmn:sequenceFlow id="SequenceFlow_0cr4150" sourceRef="Task_0b2yqy2" targetRef="Task_0fkk5p2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1ikhrbe" name="&#10;&#10;" sourceRef="Task_0b2yqy2" targetRef="Task_0sw21c5">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="Task_0b2yqy2" name="Обработка ошибок" camunda:formKey="/accounts/forms/error" camunda:candidateGroups="RESERVE_ACCOUNT_ADMIN">
+      <bpmn:incoming>SequenceFlow_0zjmpzh</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0cr4150</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1ikhrbe</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_10zgh06" sourceRef="Task_0sw21c5" targetRef="EndEvent_04mfyry" />
+    <bpmn:boundaryEvent id="BoundaryEvent_08awop6" attachedToRef="Task_0aipf2v">
+      <bpmn:outgoing>SequenceFlow_0ycpb1j</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P10D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0ycpb1j" sourceRef="BoundaryEvent_08awop6" targetRef="Task_0sw21c5" />
+    <bpmn:serviceTask id="Task_0sw21c5" name="Отправка просроченного забронированного счета в архив" camunda:expression="${accountReservationService.sendToArc(execution)}">
+      <bpmn:incoming>SequenceFlow_1ikhrbe</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0ycpb1j</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0k2z3un</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_10zgh06</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1u60l03" sourceRef="Task_0fkk5p2" targetRef="Task_0aipf2v" />
+    <bpmn:userTask id="Task_0aipf2v" name="Ожидание 10 дней">
+      <bpmn:incoming>SequenceFlow_1u60l03</bpmn:incoming>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="BoundaryEvent_1ymgzdo" attachedToRef="Task_0sw21c5">
+      <bpmn:outgoing>SequenceFlow_0zyn3o9</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="Error_18zv97k" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0zyn3o9" sourceRef="BoundaryEvent_1ymgzdo" targetRef="Task_0zebnt4" />
+    <bpmn:userTask id="Task_0zebnt4" name="Обработка ошибок" camunda:formKey="/accounts/forms/error" camunda:candidateGroups="RESERVE_ACCOUNT_ADMIN">
+      <bpmn:incoming>SequenceFlow_0zyn3o9</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0k2z3un</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1v51j4k</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0k2z3un" sourceRef="Task_0zebnt4" targetRef="Task_0sw21c5">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1v51j4k" sourceRef="Task_0zebnt4" targetRef="EndEvent_04mfyry">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmn:error id="Error_18zv97k" name="SystemError" errorCode="SystemError" />
+  <bpmn:error id="Error_1f81xts" name="Error_27fprcq" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="ReserveAccaunt">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="166" y="211" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1jmuzmt_di" bpmnElement="SequenceFlow_1jmuzmt">
+        <di:waypoint x="202" y="229" />
+        <di:waypoint x="336" y="229" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_04mfyry_di" bpmnElement="EndEvent_04mfyry">
+        <dc:Bounds x="1494" y="385" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1uvzckr_di" bpmnElement="Task_0orlwyu">
+        <dc:Bounds x="336" y="189" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0di1p1w_di" bpmnElement="SequenceFlow_0di1p1w">
+        <di:waypoint x="436" y="229" />
+        <di:waypoint x="696" y="229" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_0g1mgbd_di" bpmnElement="resAccCallProcTask">
+        <dc:Bounds x="696" y="189" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_16rso8v_di" bpmnElement="SequenceFlow_16rso8v">
+        <di:waypoint x="796" y="229" />
+        <di:waypoint x="977" y="229" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_1eu9cee_di" bpmnElement="Task_0fkk5p2">
+        <dc:Bounds x="977" y="189" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_03r5wbq_di" bpmnElement="BoundaryEvent_0k277x8">
+        <dc:Bounds x="418" y="251" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_142vltl_di" bpmnElement="SequenceFlow_142vltl">
+        <di:waypoint x="436" y="287" />
+        <di:waypoint x="436" y="325" />
+        <di:waypoint x="386" y="325" />
+        <di:waypoint x="386" y="363" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1ccoznn_di" bpmnElement="Task_13jk4lo">
+        <dc:Bounds x="336" y="363" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_045qm6b_di" bpmnElement="SequenceFlow_045qm6b">
+        <di:waypoint x="336" y="403" />
+        <di:waypoint x="293" y="403" />
+        <di:waypoint x="293" y="244" />
+        <di:waypoint x="336" y="244" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateCatchEvent_1j9dh4q_di" bpmnElement="declineRequestLink">
+        <dc:Bounds x="166" y="576" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="147" y="619" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_16b267g_di" bpmnElement="SequenceFlow_16b267g">
+        <di:waypoint x="202" y="594" />
+        <di:waypoint x="252" y="594" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_1d84ukc_di" bpmnElement="EndEvent_1d84ukc">
+        <dc:Bounds x="437" y="576" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1lwvysk_di" bpmnElement="SequenceFlow_1lwvysk">
+        <di:waypoint x="352" y="594" />
+        <di:waypoint x="437" y="594" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_0sd6nzo_di" bpmnElement="Task_0k546w0">
+        <dc:Bounds x="252" y="554" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_137m3ln_di" bpmnElement="SequenceFlow_137m3ln">
+        <di:waypoint x="436" y="403" />
+        <di:waypoint x="511" y="403" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1g7n2uc_di" bpmnElement="declineRequestThrow">
+        <dc:Bounds x="511" y="385" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="493" y="428" width="74" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_0w12us1_di" bpmnElement="BoundaryEvent_1wxpkph">
+        <dc:Bounds x="778" y="251" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_1nj63ky_di" bpmnElement="BoundaryEvent_0ohasnh">
+        <dc:Bounds x="1009" y="251" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1eyxwyk_di" bpmnElement="tocanel">
+        <di:waypoint x="796" y="403" />
+        <di:waypoint x="861" y="403" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="792" y="385" width="74" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0wtrrr5_di" bpmnElement="SequenceFlow_0wtrrr5">
+        <di:waypoint x="796" y="287" />
+        <di:waypoint x="796" y="316" />
+        <di:waypoint x="746" y="316" />
+        <di:waypoint x="746" y="363" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ojuflc_di" bpmnElement="SequenceFlow_0ojuflc">
+        <di:waypoint x="696" y="403" />
+        <di:waypoint x="643" y="403" />
+        <di:waypoint x="643" y="246" />
+        <di:waypoint x="696" y="246" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1n7tvi2_di" bpmnElement="Task_1ods1fe">
+        <dc:Bounds x="696" y="363" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1uipkf1_di" bpmnElement="IntermediateThrowEvent_1okoecw">
+        <dc:Bounds x="861" y="385" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="842" y="428" width="74" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0j1pnna_di" bpmnElement="SequenceFlow_0j1pnna">
+        <di:waypoint x="746" y="189" />
+        <di:waypoint x="746" y="119" />
+        <di:waypoint x="792" y="119" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1l5mbom_di" bpmnElement="IntermediateThrowEvent_1pzr2ig">
+        <dc:Bounds x="792" y="101" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="775" y="144" width="74" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0zjmpzh_di" bpmnElement="SequenceFlow_0zjmpzh">
+        <di:waypoint x="1027" y="287" />
+        <di:waypoint x="1027" y="363" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0cr4150_di" bpmnElement="SequenceFlow_0cr4150">
+        <di:waypoint x="977" y="403" />
+        <di:waypoint x="925" y="403" />
+        <di:waypoint x="925" y="251" />
+        <di:waypoint x="977" y="251" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ikhrbe_di" bpmnElement="SequenceFlow_1ikhrbe">
+        <di:waypoint x="1077" y="403" />
+        <di:waypoint x="1268" y="403" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1093" y="385" width="0" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1q5hdy4_di" bpmnElement="Task_0b2yqy2">
+        <dc:Bounds x="977" y="363" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_10zgh06_di" bpmnElement="SequenceFlow_10zgh06">
+        <di:waypoint x="1368" y="403" />
+        <di:waypoint x="1494" y="403" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="BoundaryEvent_14batsa_di" bpmnElement="BoundaryEvent_08awop6">
+        <dc:Bounds x="1300" y="251" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ycpb1j_di" bpmnElement="SequenceFlow_0ycpb1j">
+        <di:waypoint x="1318" y="287" />
+        <di:waypoint x="1318" y="363" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_0nv06ti_di" bpmnElement="Task_0sw21c5">
+        <dc:Bounds x="1268" y="363" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1u60l03_di" bpmnElement="SequenceFlow_1u60l03">
+        <di:waypoint x="1077" y="229" />
+        <di:waypoint x="1268" y="229" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1dl6qxi_di" bpmnElement="Task_0aipf2v">
+        <dc:Bounds x="1268" y="189" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_0jd418x_di" bpmnElement="BoundaryEvent_1ymgzdo">
+        <dc:Bounds x="1300" y="425" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0zyn3o9_di" bpmnElement="SequenceFlow_0zyn3o9">
+        <di:waypoint x="1318" y="461" />
+        <di:waypoint x="1318" y="521" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1bnc2zd_di" bpmnElement="Task_0zebnt4">
+        <dc:Bounds x="1268" y="522" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0k2z3un_di" bpmnElement="SequenceFlow_0k2z3un">
+        <di:waypoint x="1268" y="562" />
+        <di:waypoint x="1193" y="562" />
+        <di:waypoint x="1193" y="416" />
+        <di:waypoint x="1268" y="416" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1v51j4k_di" bpmnElement="SequenceFlow_1v51j4k">
+        <di:waypoint x="1368" y="562" />
+        <di:waypoint x="1512" y="562" />
+        <di:waypoint x="1512" y="421" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

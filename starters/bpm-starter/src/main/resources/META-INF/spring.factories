@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  config.kz.fintech.starter.bpm.BpmAutoConfig

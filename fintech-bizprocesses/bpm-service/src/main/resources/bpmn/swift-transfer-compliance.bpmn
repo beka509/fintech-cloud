@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_12qkh36" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.11.1" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.15.0">
+  <bpmn:process id="SwiftInternationalTransferProcess" name="Перевод СВИФТ" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1" name="Старт процесса">
+      <bpmn:outgoing>Flow_1tccp45</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1tccp45" sourceRef="StartEvent_1" targetRef="Activity_0962cv3" />
+    <bpmn:serviceTask id="Activity_0962cv3" name="Инициализация процесса" camunda:type="external" camunda:topic="SwiftInitProcess">
+      <bpmn:incoming>Flow_1tccp45</bpmn:incoming>
+      <bpmn:outgoing>Flow_0jgn2ad</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_07eyvn7" name="Проверка необходимости согласования Комплаенс">
+      <bpmn:incoming>Flow_0jgn2ad</bpmn:incoming>
+      <bpmn:outgoing>Flow_0t3isam</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0ftz8g3</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_0jgn2ad" sourceRef="Activity_0962cv3" targetRef="Gateway_07eyvn7" />
+    <bpmn:sequenceFlow id="Flow_0t3isam" name="Нет" sourceRef="Gateway_07eyvn7" targetRef="Activity_0enyjlv">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!needCompliance}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0ftz8g3" name="Да" sourceRef="Gateway_07eyvn7" targetRef="Activity_02wjz1t">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${needCompliance}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="Activity_02wjz1t" name="Комплаенс-контроль" camunda:formKey="/money-transfer/forms/swift/compliance" camunda:candidateGroups="COMPLIANCE_CONTROL_GROUP">
+      <bpmn:incoming>Flow_0ftz8g3</bpmn:incoming>
+      <bpmn:outgoing>Flow_0t9zi6d</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_0b3pptu" name="Результат подтверждения">
+      <bpmn:incoming>Flow_0t9zi6d</bpmn:incoming>
+      <bpmn:outgoing>Flow_0qb8ldp</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0svef1l</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_0t9zi6d" sourceRef="Activity_02wjz1t" targetRef="Gateway_0b3pptu" />
+    <bpmn:sequenceFlow id="Flow_0qb8ldp" name="Отказ" sourceRef="Gateway_0b3pptu" targetRef="Activity_0dq6mvu">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!complianceApproved}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0svef1l" name="Добро" sourceRef="Gateway_0b3pptu" targetRef="Activity_0enyjlv">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${complianceApproved}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="Event_1fgz54s">
+      <bpmn:incoming>Flow_1bo5htp</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1bo5htp" sourceRef="Activity_0dq6mvu" targetRef="Event_1fgz54s" />
+    <bpmn:serviceTask id="Activity_0enyjlv" name="Проведение перевода в Colvir" camunda:type="external" camunda:topic="SwiftTransferSendColvir">
+      <bpmn:incoming>Flow_0t3isam</bpmn:incoming>
+      <bpmn:incoming>Flow_0svef1l</bpmn:incoming>
+      <bpmn:outgoing>Flow_0iywhln</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Activity_0dq6mvu" name="Отказ перевода Комплаенсом" camunda:type="external" camunda:topic="SwiftComplianceReject">
+      <bpmn:incoming>Flow_0qb8ldp</bpmn:incoming>
+      <bpmn:outgoing>Flow_1bo5htp</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Event_1rbdq9q">
+      <bpmn:incoming>Flow_0iywhln</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0iywhln" sourceRef="Activity_0enyjlv" targetRef="Event_1rbdq9q" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="SwiftInternationalTransferProcess">
+      <bpmndi:BPMNEdge id="Flow_1bo5htp_di" bpmnElement="Flow_1bo5htp">
+        <di:waypoint x="940" y="280" />
+        <di:waypoint x="1052" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0svef1l_di" bpmnElement="Flow_0svef1l">
+        <di:waypoint x="710" y="255" />
+        <di:waypoint x="710" y="167" />
+        <di:waypoint x="840" y="167" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="724" y="208" width="32" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0qb8ldp_di" bpmnElement="Flow_0qb8ldp">
+        <di:waypoint x="735" y="280" />
+        <di:waypoint x="840" y="280" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="773" y="262" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0t9zi6d_di" bpmnElement="Flow_0t9zi6d">
+        <di:waypoint x="630" y="280" />
+        <di:waypoint x="685" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ftz8g3_di" bpmnElement="Flow_0ftz8g3">
+        <di:waypoint x="450" y="192" />
+        <di:waypoint x="450" y="280" />
+        <di:waypoint x="530" y="280" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="459" y="233" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0t3isam_di" bpmnElement="Flow_0t3isam">
+        <di:waypoint x="475" y="167" />
+        <di:waypoint x="840" y="167" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="651" y="149" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0jgn2ad_di" bpmnElement="Flow_0jgn2ad">
+        <di:waypoint x="370" y="167" />
+        <di:waypoint x="425" y="167" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1tccp45_di" bpmnElement="Flow_1tccp45">
+        <di:waypoint x="215" y="167" />
+        <di:waypoint x="270" y="167" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0iywhln_di" bpmnElement="Flow_0iywhln">
+        <di:waypoint x="940" y="167" />
+        <di:waypoint x="1052" y="167" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="149" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="157" y="192" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0bwq7h5_di" bpmnElement="Activity_0962cv3">
+        <dc:Bounds x="270" y="127" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_07eyvn7_di" bpmnElement="Gateway_07eyvn7" isMarkerVisible="true">
+        <dc:Bounds x="425" y="142" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="410" y="79" width="79" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0dlo8sg_di" bpmnElement="Activity_02wjz1t">
+        <dc:Bounds x="530" y="240" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0b3pptu_di" bpmnElement="Gateway_0b3pptu" isMarkerVisible="true">
+        <dc:Bounds x="685" y="255" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="670" y="312" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1fgz54s_di" bpmnElement="Event_1fgz54s">
+        <dc:Bounds x="1052" y="262" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_155prcq_di" bpmnElement="Activity_0enyjlv">
+        <dc:Bounds x="840" y="127" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0lhjgek_di" bpmnElement="Activity_0dq6mvu">
+        <dc:Bounds x="840" y="240" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1rbdq9q_di" bpmnElement="Event_1rbdq9q">
+        <dc:Bounds x="1052" y="149" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

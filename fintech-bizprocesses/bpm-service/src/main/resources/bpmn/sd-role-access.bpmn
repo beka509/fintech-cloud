@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1e3aqfd" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.11.1" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.15.0">
+  <bpmn:process id="ServiceDeskGrantRole" name="Принятие заявки на получение доступа/роли в NF" isExecutable="true">
+    <bpmn:startEvent id="Event_1iwqtut">
+      <bpmn:outgoing>Flow_1mangtl</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="Event_0ifc7co">
+      <bpmn:incoming>Flow_18yzws0</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="Event_19gk2hl">
+      <bpmn:incoming>Flow_0x19bkd</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Activity_04utra7" name="Запрос на получение доступа/роли  в NF" camunda:formKey="/service-desk/grant-role/forms/acceptor" camunda:candidateGroups="SD_CURATORS">
+      <bpmn:incoming>Flow_1mangtl</bpmn:incoming>
+      <bpmn:outgoing>Flow_164zlvk</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0rcb2t4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Activity_0z3pck7" name="Уведомление о принятии" camunda:type="external" camunda:topic="SendApproveApp">
+      <bpmn:incoming>Flow_05qf4e7</bpmn:incoming>
+      <bpmn:outgoing>Flow_18yzws0</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Task_SaveRequest" name="Сохранение в БД" camunda:type="external" camunda:topic="SaveRequest">
+      <bpmn:incoming>Flow_0rcb2t4</bpmn:incoming>
+      <bpmn:outgoing>Flow_05qf4e7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1mangtl" sourceRef="Event_1iwqtut" targetRef="Activity_04utra7" />
+    <bpmn:sequenceFlow id="Flow_164zlvk" name="Отклонить" sourceRef="Activity_04utra7" targetRef="Activity_111xcej">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${grantApprove!=1}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0x19bkd" sourceRef="Activity_0d8dj7p" targetRef="Event_19gk2hl" />
+    <bpmn:sequenceFlow id="Flow_0rcb2t4" name="Принять" sourceRef="Activity_04utra7" targetRef="Task_SaveRequest">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${grantApprove==1}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="Activity_0d8dj7p" name="Уведомление об отклонении" camunda:type="external" camunda:topic="SendDeclineApp">
+      <bpmn:incoming>Flow_1vbextg</bpmn:incoming>
+      <bpmn:outgoing>Flow_0x19bkd</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_05qf4e7" sourceRef="Task_SaveRequest" targetRef="Activity_0z3pck7" />
+    <bpmn:sequenceFlow id="Flow_18yzws0" sourceRef="Activity_0z3pck7" targetRef="Event_0ifc7co" />
+    <bpmn:serviceTask id="Activity_111xcej" name="Сохранение в БД" camunda:type="external" camunda:topic="SaveDeclinedRequest">
+      <bpmn:incoming>Flow_164zlvk</bpmn:incoming>
+      <bpmn:outgoing>Flow_1vbextg</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1vbextg" sourceRef="Activity_111xcej" targetRef="Activity_0d8dj7p" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="ServiceDeskGrantRole">
+      <bpmndi:BPMNEdge id="Flow_1vbextg_di" bpmnElement="Flow_1vbextg">
+        <di:waypoint x="390" y="310" />
+        <di:waypoint x="390" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_18yzws0_di" bpmnElement="Flow_18yzws0">
+        <di:waypoint x="860" y="120" />
+        <di:waypoint x="982" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_05qf4e7_di" bpmnElement="Flow_05qf4e7">
+        <di:waypoint x="670" y="120" />
+        <di:waypoint x="760" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0rcb2t4_di" bpmnElement="Flow_0rcb2t4">
+        <di:waypoint x="440" y="120" />
+        <di:waypoint x="570" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="487" y="103" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0x19bkd_di" bpmnElement="Flow_0x19bkd">
+        <di:waypoint x="390" y="470" />
+        <di:waypoint x="390" y="522" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_164zlvk_di" bpmnElement="Flow_164zlvk">
+        <di:waypoint x="390" y="160" />
+        <di:waypoint x="390" y="230" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="332" y="182" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1mangtl_di" bpmnElement="Flow_1mangtl">
+        <di:waypoint x="188" y="120" />
+        <di:waypoint x="340" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Event_1iwqtut_di" bpmnElement="Event_1iwqtut">
+        <dc:Bounds x="152" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0ifc7co_di" bpmnElement="Event_0ifc7co">
+        <dc:Bounds x="982" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_19gk2hl_di" bpmnElement="Event_19gk2hl">
+        <dc:Bounds x="372" y="522" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_04utra7_di" bpmnElement="Activity_04utra7">
+        <dc:Bounds x="340" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0z3pck7_di" bpmnElement="Activity_0z3pck7">
+        <dc:Bounds x="760" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0wbnfbb_di" bpmnElement="Task_SaveRequest">
+        <dc:Bounds x="570" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_111xcej_di" bpmnElement="Activity_111xcej">
+        <dc:Bounds x="340" y="230" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0o6j15v_di" bpmnElement="Activity_0d8dj7p">
+        <dc:Bounds x="340" y="390" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_0cxhmbn" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="2.2.4">
+  <bpmn:process id="SuspiciousOperationProcess" name="Сообщение о&#10;подозрительной операции" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_1c7bzsp</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1c7bzsp" sourceRef="StartEvent_1" targetRef="AcceptorUserTask" />
+    <bpmn:userTask id="AcceptorUserTask" name="Принятие заявки работником ГКК" camunda:formKey="/suspicious-operation/forms/acceptor" camunda:candidateGroups="${suspiciousOperationService.acceptorsGroup(execution)}">
+      <bpmn:incoming>SequenceFlow_02qomh1</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1c7bzsp</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1hygomh</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_12slxa5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="ExecutorUserTask" name="Завершение заявки работником ГКК" camunda:formKey="/suspicious-operation/forms/executor" camunda:candidateGroups="${suspiciousOperationService.executorsGroup(execution)}">
+      <bpmn:incoming>SequenceFlow_1w9u8lf</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_11nnqhb</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_11nnqhb" sourceRef="ExecutorUserTask" targetRef="SendCompleteNoticeTask" />
+    <bpmn:serviceTask id="SaveRequestFinal" name="Сохранение данных в БД" camunda:expression="${suspiciousOperationService.saveRequest(execution)}">
+      <bpmn:incoming>SequenceFlow_0dw2i3t</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_08ukr5u</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="BoundaryEvent_07yt7xz" cancelActivity="false" attachedToRef="ExecutorUserTask">
+      <bpmn:outgoing>SequenceFlow_0b1cxkf</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P60D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0b1cxkf" sourceRef="BoundaryEvent_07yt7xz" targetRef="SendDeadlineNoticeTask" />
+    <bpmn:serviceTask id="SaveRequestAccept" name="Сохранение данных в БД" camunda:expression="${suspiciousOperationService.saveRequest(execution)}">
+      <bpmn:incoming>SequenceFlow_026387j</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1w9u8lf</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1hygomh" name="Принять" sourceRef="AcceptorUserTask" targetRef="SendSuccessNoticeTask">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.acceptor.decision=='APPROVE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="InitiatorUserTask" name="Устранение замечаний" camunda:formKey="/suspicious-operation/forms/initiator" camunda:assignee="${request.initiator.accountName}">
+      <bpmn:incoming>SequenceFlow_0oaaasa</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_02qomh1</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1kvkelo</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1w9u8lf" sourceRef="SaveRequestAccept" targetRef="ExecutorUserTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_12slxa5" name="Не принять" sourceRef="AcceptorUserTask" targetRef="SaveRequestDecline">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.acceptor.decision=='DECLINE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_02qomh1" name="Отправить" sourceRef="InitiatorUserTask" targetRef="AcceptorUserTask">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='APPROVE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="EndEvent_19bqxud">
+      <bpmn:incoming>SequenceFlow_1kvkelo</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1kvkelo" name="Отменить" sourceRef="InitiatorUserTask" targetRef="EndEvent_19bqxud">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="SendDeadlineNoticeTask" name="Уведомление о необходимости завершения заявки" camunda:expression="${suspiciousOperationService.sendDeadlineNotice(execution)}">
+      <bpmn:incoming>SequenceFlow_0b1cxkf</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_022x8ay</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_13o3fhj">
+      <bpmn:incoming>SequenceFlow_022x8ay</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_022x8ay" sourceRef="SendDeadlineNoticeTask" targetRef="EndEvent_13o3fhj" />
+    <bpmn:endEvent id="EndEvent_19qwc9h">
+      <bpmn:incoming>SequenceFlow_08ukr5u</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_08ukr5u" sourceRef="SaveRequestFinal" targetRef="EndEvent_19qwc9h" />
+    <bpmn:serviceTask id="SendSuccessNoticeTask" name="Уведомление о принятии сообщения" camunda:expression="${suspiciousOperationService.sendSuccessNotice(execution)}">
+      <bpmn:incoming>SequenceFlow_1hygomh</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_026387j</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_026387j" sourceRef="SendSuccessNoticeTask" targetRef="SaveRequestAccept" />
+    <bpmn:serviceTask id="SaveRequestDecline" name="Сохранение данных в БД" camunda:expression="${suspiciousOperationService.saveRequest(execution)}">
+      <bpmn:incoming>SequenceFlow_12slxa5</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0oaaasa</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0oaaasa" sourceRef="SaveRequestDecline" targetRef="InitiatorUserTask" />
+    <bpmn:serviceTask id="SendCompleteNoticeTask" name="Уведомление инициатора о завершении процесса" camunda:expression="${suspiciousOperationService.sendCompleteNotice(execution)}">
+      <bpmn:incoming>SequenceFlow_11nnqhb</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0dw2i3t</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0dw2i3t" sourceRef="SendCompleteNoticeTask" targetRef="SaveRequestFinal" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="SuspiciousOperationProcess">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="173" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1c7bzsp_di" bpmnElement="SequenceFlow_1c7bzsp">
+        <di:waypoint x="209" y="120" />
+        <di:waypoint x="349" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1mmcio3_di" bpmnElement="AcceptorUserTask">
+        <dc:Bounds x="349" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0iyuv5h_di" bpmnElement="ExecutorUserTask">
+        <dc:Bounds x="933" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_11nnqhb_di" bpmnElement="SequenceFlow_11nnqhb">
+        <di:waypoint x="1033" y="120" />
+        <di:waypoint x="1140" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_0o8d7ui_di" bpmnElement="SaveRequestFinal">
+        <dc:Bounds x="1338" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_0aqxgsy_di" bpmnElement="BoundaryEvent_07yt7xz">
+        <dc:Bounds x="1015" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0b1cxkf_di" bpmnElement="SequenceFlow_0b1cxkf">
+        <di:waypoint x="1033" y="178" />
+        <di:waypoint x="1033" y="242" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_0gg83q1_di" bpmnElement="SaveRequestAccept">
+        <dc:Bounds x="762" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1hygomh_di" bpmnElement="SequenceFlow_1hygomh">
+        <di:waypoint x="449" y="120" />
+        <di:waypoint x="573" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="491" y="102" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_0zx3r0y_di" bpmnElement="InitiatorUserTask">
+        <dc:Bounds x="141" y="255" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1w9u8lf_di" bpmnElement="SequenceFlow_1w9u8lf">
+        <di:waypoint x="862" y="120" />
+        <di:waypoint x="933" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_12slxa5_di" bpmnElement="SequenceFlow_12slxa5">
+        <di:waypoint x="399" y="160" />
+        <di:waypoint x="399" y="255" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="408" y="201" width="59" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_02qomh1_di" bpmnElement="SequenceFlow_02qomh1">
+        <di:waypoint x="191" y="255" />
+        <di:waypoint x="191" y="181" />
+        <di:waypoint x="347" y="139" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="209" y="187" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_19bqxud_di" bpmnElement="EndEvent_19bqxud">
+        <dc:Bounds x="173" y="392" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1kvkelo_di" bpmnElement="SequenceFlow_1kvkelo">
+        <di:waypoint x="191" y="335" />
+        <di:waypoint x="191" y="392" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="274" y="275" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_19ffwuy_di" bpmnElement="SendDeadlineNoticeTask">
+        <dc:Bounds x="983" y="242" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_13o3fhj_di" bpmnElement="EndEvent_13o3fhj">
+        <dc:Bounds x="1133" y="264" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_022x8ay_di" bpmnElement="SequenceFlow_022x8ay">
+        <di:waypoint x="1083" y="282" />
+        <di:waypoint x="1133" y="282" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_19qwc9h_di" bpmnElement="EndEvent_19qwc9h">
+        <dc:Bounds x="1511" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_08ukr5u_di" bpmnElement="SequenceFlow_08ukr5u">
+        <di:waypoint x="1438" y="120" />
+        <di:waypoint x="1511" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_1e3tv5d_di" bpmnElement="SendSuccessNoticeTask">
+        <dc:Bounds x="573" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_026387j_di" bpmnElement="SequenceFlow_026387j">
+        <di:waypoint x="673" y="120" />
+        <di:waypoint x="762" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_1935fnh_di" bpmnElement="SaveRequestDecline">
+        <dc:Bounds x="349" y="255" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0oaaasa_di" bpmnElement="SequenceFlow_0oaaasa">
+        <di:waypoint x="349" y="295" />
+        <di:waypoint x="241" y="295" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_18yvypx_di" bpmnElement="SendCompleteNoticeTask">
+        <dc:Bounds x="1140" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0dw2i3t_di" bpmnElement="SequenceFlow_0dw2i3t">
+        <di:waypoint x="1240" y="120" />
+        <di:waypoint x="1338" y="120" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,24 @@
+server:
+  port: 45413
+camunda.bpm:
+  database:
+    type: postgres
+  admin-user:
+    id: kermit
+    password: kermid
+    firstName: Kermit
+  filter:
+    create: All tasks
+  authorization:
+    tenant-check-enabled: false
+spring:
+  datasource:
+    url: jdbc:postgresql://172.17.56.7:5432/camunda
+    username: camunda
+    password: xxx
+    hikari:
+      schema: camunda
+    driver-class-name: org.postgresql.Driver
+    max-active: 10
+
+    #'{cipher}AQA0SI84Oxv9ji8F0hreKxpXhpveImp3lh6L+4iqx9IHYdd9VpHuYkpP7P+z/gj8fAOnl/5ZAB3i7YfDiL7ornGTAnqWw18RP1BzN7OzeELsUnQEjSvFZNNqMIqqjYNI25jaWkOyD9vblEmqfynGAFz1tH0zBTV/bZtYqfExOYhuueEDsnAyyDh+s6JFnvtTTBOJxAHpHgbBfrb5sS8+q+SnsKm7FkCT6lPlh8BjasyUHoF6UFQ3O1cCfXp68EOBhPu8c/8jh+NaUkWlCvPLRYzL9Tqx09GftBS7Yih/3AQYumt3nTcZ3daBuijfqDDVqz6UZrRDhj/+xs0cXO/aiuMdGpfwamETCSX8kE2pp6CjhpfVswrHWukV9fBo7FU4lZ8='

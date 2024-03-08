@@ -1,0 +1,39 @@
+server:
+  port: 8888
+spring:
+  application:
+    name: configserver
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://bitbucket.org/fintech-sc/config-back.git
+          username: Beka509
+          password: ATBB8pdkG4bTUnE7vdN7RzHMvTSmF6BE82C0
+          clone-on-start: false
+          timeout: 30
+          default-label: master
+        vault:
+          timeout: 30
+#  security:
+#    user:
+#      name: nova
+#      password: n0v@91k@s$a
+
+#logging:
+#  file: ${user.dir}/logs/${spring.application.name:configserver}.log
+#  file: /home/user/logs/${spring.application.name:configserver}.log
+
+encrypt:
+  key-store:
+    location: classpath:/config-server.jks
+    password: S00p3rH@rdP@$$w0rd
+    alias: config-server-key
+    secret: S00p3rH@rdP@$$w0rd
+eureka:
+  client:
+    region: default
+    registry-fetch-interval-seconds: 5
+    service-url:
+      defaultZone: http://eureka-server:8787/eureka/
+    fetch-registry: true

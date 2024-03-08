@@ -1,0 +1,47 @@
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://eureka-server:8787/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: call-service
+  config:
+    import: "optional:configserver:"
+  cloud:
+    config:
+      #      discovery:
+      #        service-id: CONFIGSERVER
+      #        enabled: true
+      label: master
+      fail-fast: true
+      uri: http://config-server:8888
+    service-registry:
+      auto-registration:
+        enabled: true
+  profiles:
+    active:
+      - @spring.profiles.active@
+      - db-@spring.profiles.active@
+      #- jpa-@spring.profiles.active@
+  jackson:
+    serialization:
+      FAIL_ON_EMPTY_BEANS: false
+server:
+  port: 7707
+logging:
+  file:
+    name: @app.logging.path@${spring.application.name}/${spring.application.name}.log
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+
+asterisk:
+  host: 91.147.93.180
+  port: 5038

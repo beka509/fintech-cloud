@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_0nd20ep" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.8.1">
+  <bpmn:process id="bailiff_arest_change_req" name="ЧСИ Изменение ареста(sub)" isExecutable="true">
+    <bpmn:exclusiveGateway id="ExcGway_arestSend" name="Проверка отправки результата" camunda:asyncAfter="true">
+      <bpmn:incoming>SequenceFlow_0dthw0b</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_070dki7</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_03nkgbr</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_0dthw0b" sourceRef="Task_UpdAndSendChangedArest" targetRef="ExcGway_arestSend" />
+    <bpmn:endEvent id="EndEvent_arest" name="Конец" camunda:asyncAfter="true">
+      <bpmn:incoming>SequenceFlow_070dki7</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_070dki7" name="Результат отправлен" sourceRef="ExcGway_arestSend" targetRef="EndEvent_arest">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">#{status=='SCSS001'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="Task_UpdAndSendChangedArest" name="Обновл. и отправка статуса ареста в ЧСИ" camunda:asyncBefore="true" camunda:asyncAfter="true" camunda:type="external" camunda:topic="UpdAndSendChangedArest" camunda:taskPriority="20">
+      <bpmn:incoming>SequenceFlow_1p4ocmj</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_13xymkt</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_05sgatm</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0dthw0b</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="Task_errArestSend" name="Обработка ошибок" camunda:candidateGroups="BAILIFF_USERS">
+      <bpmn:incoming>SequenceFlow_03nkgbr</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_18wcuwh</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1p4ocmj</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0iq0we7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_03nkgbr" name="Ошибка при отправке результата" sourceRef="ExcGway_arestSend" targetRef="Task_errArestSend">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">#{status!='SCSS001'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1p4ocmj" name="Перезапуск" sourceRef="Task_errArestSend" targetRef="Task_UpdAndSendChangedArest">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:boundaryEvent id="InterThrowEvent_sendAccounts" attachedToRef="Task_UpdAndSendChangedArest">
+      <bpmn:outgoing>SequenceFlow_18wcuwh</bpmn:outgoing>
+      <bpmn:errorEventDefinition />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_18wcuwh" sourceRef="InterThrowEvent_sendAccounts" targetRef="Task_errArestSend" />
+    <bpmn:endEvent id="EndEvent_arestSend" name="Отменен">
+      <bpmn:incoming>SequenceFlow_0iq0we7</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0iq0we7" name="Отменить" sourceRef="Task_errArestSend" targetRef="EndEvent_arestSend">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:boundaryEvent id="IntermediateThrowEvent_0a4ihpq" name="30 мин" attachedToRef="Task_errArestSend">
+      <bpmn:outgoing>SequenceFlow_13xymkt</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT30M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_13xymkt" sourceRef="IntermediateThrowEvent_0a4ihpq" targetRef="Task_UpdAndSendChangedArest" />
+    <bpmn:startEvent id="StartEvent_arest" name="Начало">
+      <bpmn:outgoing>SequenceFlow_0mhu2cs</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0mhu2cs" sourceRef="StartEvent_arest" targetRef="Task_1vkwj3z" />
+    <bpmn:scriptTask id="Task_1vkwj3z" name="Установить статус" camunda:asyncBefore="true" camunda:asyncAfter="true" scriptFormat="Javascript">
+      <bpmn:incoming>SequenceFlow_0mhu2cs</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_05sgatm</bpmn:outgoing>
+      <bpmn:script>execution.setVariable("status", "STARTED");</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="SequenceFlow_05sgatm" sourceRef="Task_1vkwj3z" targetRef="Task_UpdAndSendChangedArest" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="bailiff_arest_change_req">
+      <bpmndi:BPMNEdge id="SequenceFlow_05sgatm_di" bpmnElement="SequenceFlow_05sgatm">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="480" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0mhu2cs_di" bpmnElement="SequenceFlow_0mhu2cs">
+        <di:waypoint x="188" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_070dki7_di" bpmnElement="SequenceFlow_070dki7">
+        <di:waypoint x="775" y="117" />
+        <di:waypoint x="942" y="117" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="832" y="86" width="54" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0dthw0b_di" bpmnElement="SequenceFlow_0dthw0b">
+        <di:waypoint x="580" y="117" />
+        <di:waypoint x="725" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_03nkgbr_di" bpmnElement="SequenceFlow_03nkgbr">
+        <di:waypoint x="750" y="142" />
+        <di:waypoint x="750" y="280" />
+        <di:waypoint x="630" y="280" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="758" y="208" width="63" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1p4ocmj_di" bpmnElement="SequenceFlow_1p4ocmj">
+        <di:waypoint x="530" y="280" />
+        <di:waypoint x="500" y="280" />
+        <di:waypoint x="500" y="157" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="429" y="203" width="61" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_13xymkt_di" bpmnElement="SequenceFlow_13xymkt">
+        <di:waypoint x="512" y="320" />
+        <di:waypoint x="460" y="320" />
+        <di:waypoint x="460" y="140" />
+        <di:waypoint x="480" y="140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_18wcuwh_di" bpmnElement="SequenceFlow_18wcuwh">
+        <di:waypoint x="580" y="175" />
+        <di:waypoint x="580" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0iq0we7_di" bpmnElement="SequenceFlow_0iq0we7">
+        <di:waypoint x="580" y="320" />
+        <di:waypoint x="580" y="390" />
+        <di:waypoint x="662" y="390" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="570" y="352" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="StartEvent_0qgyfxq_di" bpmnElement="StartEvent_arest">
+        <dc:Bounds x="152" y="99" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="152" y="142" width="37" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_1302oa2_di" bpmnElement="Task_1vkwj3z">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1yuvwbe_di" bpmnElement="ExcGway_arestSend" isMarkerVisible="true">
+        <dc:Bounds x="725" y="92" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="722" y="44" width="56" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1vyx7gs_di" bpmnElement="Task_UpdAndSendChangedArest">
+        <dc:Bounds x="480" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_011kugd_di" bpmnElement="Task_errArestSend">
+        <dc:Bounds x="530" y="240" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_03lk6g6_di" bpmnElement="EndEvent_arestSend">
+        <dc:Bounds x="662" y="372" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="657" y="415" width="46" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0zqht93_di" bpmnElement="EndEvent_arest">
+        <dc:Bounds x="942" y="99" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="945" y="142" width="32" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_0dphlkf_di" bpmnElement="IntermediateThrowEvent_0a4ihpq">
+        <dc:Bounds x="512" y="302" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="513" y="345" width="36" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_1u4wm08_di" bpmnElement="InterThrowEvent_sendAccounts">
+        <dc:Bounds x="562" y="139" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

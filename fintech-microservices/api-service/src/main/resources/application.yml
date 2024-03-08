@@ -1,0 +1,44 @@
+spring:
+  jmx:
+    enabled: off
+  application:
+    name: api-service
+  config:
+    import: "optional:configserver:"
+  cloud:
+    config:
+#      discovery:
+#        service-id: CONFIGSERVER
+#        enabled: true
+      label: master
+      fail-fast: true
+      uri: http://config-server:8888
+    service-registry:
+      auto-registration:
+        enabled: true
+  profiles:
+    active:
+      - @spring.profiles.active@
+      - db-@spring.profiles.active@
+      #- jpa-@spring.profiles.active@
+  jackson:
+    serialization:
+     FAIL_ON_EMPTY_BEANS: false
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+     defaultZone: @eureka.client.serviceUrl.defaultZone@
+    fetch-registry: true
+    register-with-eureka: true
+server:
+  port: 23122
+logging:
+  file:
+    name: @app.logging.path@${spring.application.name}/${spring.application.name}.log
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+  level:
+    root: info

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1ccagwx" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="2.2.4">
+  <bpmn:process id="UploadProvisionReportProcess" name="Загрузка отчета по провизиям" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1" camunda:asyncBefore="true">
+      <bpmn:outgoing>SequenceFlow_0ivu4f8</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="CalculateMatrix" name="Расчет матриц переходов" camunda:expression="${uploadProvisionReportService.calculateMatrix(execution)}">
+      <bpmn:extensionElements>
+        <camunda:properties>
+          <camunda:property name="async" value="false" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1ioq3i5</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1is7qda</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="true" camunda:collection="${request.reportPeriods}" />
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1is7qda" sourceRef="CalculateMatrix" targetRef="SuccessNotice" />
+    <bpmn:endEvent id="EndEvent_0mn0x2e">
+      <bpmn:incoming>SequenceFlow_1rp7cmg</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1rp7cmg" sourceRef="SuccessNotice" targetRef="EndEvent_0mn0x2e" />
+    <bpmn:serviceTask id="SuccessNotice" name="Уведомление об успешном завершении" camunda:expression="${uploadProvisionReportService.successNotice(execution)}">
+      <bpmn:incoming>SequenceFlow_1is7qda</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1rp7cmg</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="ParseFile" name="Парсинг следующего файла" camunda:expression="${uploadProvisionReportService.parseFile(execution)}">
+      <bpmn:extensionElements>
+        <camunda:properties>
+          <camunda:property name="async" value="false" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1cqa8y9</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_053l2vk</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="UploadLoanGroup" name="Загрузка записей в БД" camunda:expression="${uploadProvisionReportService.uploadLoans(execution)}">
+      <bpmn:extensionElements>
+        <camunda:properties>
+          <camunda:property name="async" value="false" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1ex6nla</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0ooz1x8</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0ivu4f8" sourceRef="StartEvent_1" targetRef="ExclusiveGateway_0nz7pwu" />
+    <bpmn:sequenceFlow id="SequenceFlow_053l2vk" sourceRef="ParseFile" targetRef="ExclusiveGateway_0xthgf7" />
+    <bpmn:sequenceFlow id="SequenceFlow_0ooz1x8" sourceRef="UploadLoanGroup" targetRef="ExclusiveGateway_0xthgf7" />
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0nz7pwu" name="Наличие файлов в очереди">
+      <bpmn:incoming>SequenceFlow_0ivu4f8</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1wx0uxu</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1cqa8y9</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1ioq3i5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_1cqa8y9" name="Есть" sourceRef="ExclusiveGateway_0nz7pwu" targetRef="ParseFile">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${uploadProvisionReportService.filesExists(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0xthgf7" name="Наличие записей в очереди">
+      <bpmn:incoming>SequenceFlow_053l2vk</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0ooz1x8</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1ex6nla</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1wx0uxu</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_1ex6nla" name="Есть" sourceRef="ExclusiveGateway_0xthgf7" targetRef="UploadLoanGroup">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${uploadProvisionReportService.loansExist(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1wx0uxu" name="Нет" sourceRef="ExclusiveGateway_0xthgf7" targetRef="ExclusiveGateway_0nz7pwu">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!uploadProvisionReportService.loansExist(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1ioq3i5" name="Нет" sourceRef="ExclusiveGateway_0nz7pwu" targetRef="CalculateMatrix">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!uploadProvisionReportService.filesExists(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="UploadProvisionReportProcess">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="38" y="84" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_14abkur_di" bpmnElement="UploadLoanGroup">
+        <dc:Bounds x="620" y="62" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1hahtd0_di" bpmnElement="CalculateMatrix">
+        <dc:Bounds x="801" y="62" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1is7qda_di" bpmnElement="SequenceFlow_1is7qda">
+        <di:waypoint x="901" y="102" />
+        <di:waypoint x="1006" y="102" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_0mn0x2e_di" bpmnElement="EndEvent_0mn0x2e">
+        <dc:Bounds x="1196" y="84" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1rp7cmg_di" bpmnElement="SequenceFlow_1rp7cmg">
+        <di:waypoint x="1106" y="102" />
+        <di:waypoint x="1196" y="102" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_0nkslio_di" bpmnElement="SuccessNotice">
+        <dc:Bounds x="1006" y="62" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_16rygmh_di" bpmnElement="ParseFile">
+        <dc:Bounds x="294" y="62" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ivu4f8_di" bpmnElement="SequenceFlow_0ivu4f8">
+        <di:waypoint x="74" y="102" />
+        <di:waypoint x="157" y="102" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_053l2vk_di" bpmnElement="SequenceFlow_053l2vk">
+        <di:waypoint x="394" y="102" />
+        <di:waypoint x="479" y="102" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ooz1x8_di" bpmnElement="SequenceFlow_0ooz1x8">
+        <di:waypoint x="670" y="142" />
+        <di:waypoint x="670" y="182" />
+        <di:waypoint x="504" y="182" />
+        <di:waypoint x="504" y="129" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0nz7pwu_di" bpmnElement="ExclusiveGateway_0nz7pwu" isMarkerVisible="true">
+        <dc:Bounds x="157" y="77" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="88" y="62" width="88" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1cqa8y9_di" bpmnElement="SequenceFlow_1cqa8y9">
+        <di:waypoint x="207" y="102" />
+        <di:waypoint x="294" y="102" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="239" y="84" width="24" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0xthgf7_di" bpmnElement="ExclusiveGateway_0xthgf7" isMarkerVisible="true">
+        <dc:Bounds x="479" y="77" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="408.5" y="59" width="89" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ex6nla_di" bpmnElement="SequenceFlow_1ex6nla">
+        <di:waypoint x="529" y="102" />
+        <di:waypoint x="620" y="102" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="563" y="84" width="24" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1wx0uxu_di" bpmnElement="SequenceFlow_1wx0uxu">
+        <di:waypoint x="491" y="114" />
+        <di:waypoint x="422" y="180" />
+        <di:waypoint x="182" y="180" />
+        <di:waypoint x="182" y="127" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="444" y="130" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ioq3i5_di" bpmnElement="SequenceFlow_1ioq3i5">
+        <di:waypoint x="182" y="77" />
+        <di:waypoint x="182" y="17" />
+        <di:waypoint x="851" y="17" />
+        <di:waypoint x="851" y="62" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="509" y="-1" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

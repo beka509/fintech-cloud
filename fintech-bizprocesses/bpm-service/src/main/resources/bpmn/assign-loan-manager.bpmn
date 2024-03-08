@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_0698mtd" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="2.2.4">
+  <bpmn:process id="AssignLoanManagerProcess" name="Распределение портфеля&#10;" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_1ju5ptb</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1ju5ptb" sourceRef="StartEvent_1" targetRef="ApproveAssignmentUserTask" />
+    <bpmn:userTask id="ApproveAssignmentUserTask" name="Рассмотрение заявки региональным менеджером" camunda:formKey="/loans/loan-manager/forms/regional-manager" camunda:candidateGroups="${assignLoanManagerService.regionalManagersGroup(execution)}">
+      <bpmn:incoming>SequenceFlow_1ju5ptb</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1vsvbui</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1bnx0bl</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1vsvbui" name="Согласовать" sourceRef="ApproveAssignmentUserTask" targetRef="AssignManagerToLoansTask">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.approver.decision=='APPROVE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="AssignManagerToLoansTask" name="Передача данных в АБИС Colvir" camunda:expression="${assignLoanManagerService.assignManagerToLoans(execution)}">
+      <bpmn:incoming>SequenceFlow_1vsvbui</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0gtvetn</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0mbywzv</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1bnx0bl" name="Отклонить" sourceRef="ApproveAssignmentUserTask" targetRef="RequestDeclinedUserTask">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.approver.decision=='DECLINE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:boundaryEvent id="BoundaryEvent_0ejrv9o" attachedToRef="RequestDeclinedUserTask">
+      <bpmn:outgoing>SequenceFlow_1dy74fu</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P3D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="EndEvent_1xv4g7p">
+      <bpmn:incoming>SequenceFlow_1dy74fu</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1dy74fu" sourceRef="BoundaryEvent_0ejrv9o" targetRef="EndEvent_1xv4g7p" />
+    <bpmn:endEvent id="EndEvent_0d7hk3t">
+      <bpmn:incoming>SequenceFlow_1dkbe4a</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1dkbe4a" sourceRef="RequestDeclinedUserTask" targetRef="EndEvent_0d7hk3t" />
+    <bpmn:sequenceFlow id="SequenceFlow_0mbywzv" sourceRef="AssignManagerToLoansTask" targetRef="RequestApprovedUserTask" />
+    <bpmn:userTask id="RequestDeclinedUserTask" name="Уведомление об отклонении заявки" camunda:formKey="/loans/loan-manager/forms/request-declined" camunda:assignee="${request.initiator.accountName}">
+      <bpmn:incoming>SequenceFlow_1bnx0bl</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1dkbe4a</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="RequestApprovedUserTask" name="Уведомление об успешном завершении процесса" camunda:formKey="/loans/loan-manager/forms/request-approved" camunda:assignee="${request.initiator.accountName}">
+      <bpmn:incoming>SequenceFlow_0mbywzv</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_004dp26</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="BoundaryEvent_1e6cx5p" attachedToRef="AssignManagerToLoansTask">
+      <bpmn:outgoing>SequenceFlow_0znbnka</bpmn:outgoing>
+      <bpmn:errorEventDefinition errorRef="Error_1m0f888" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0znbnka" sourceRef="BoundaryEvent_1e6cx5p" targetRef="AssignManagerToLoansErrorUserTask" />
+    <bpmn:userTask id="AssignManagerToLoansErrorUserTask" name="Обработка ошибок" camunda:formKey="/loans/loan-manager/forms/error" camunda:assignee="${request.initiator.accountName}">
+      <bpmn:incoming>SequenceFlow_0znbnka</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0582fwb</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0gtvetn</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="BoundaryEvent_0dv5a6t" attachedToRef="RequestApprovedUserTask">
+      <bpmn:outgoing>SequenceFlow_0heifoc</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P3D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="EndEvent_08wkvvl">
+      <bpmn:incoming>SequenceFlow_0heifoc</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0heifoc" sourceRef="BoundaryEvent_0dv5a6t" targetRef="EndEvent_08wkvvl" />
+    <bpmn:endEvent id="EndEvent_07yoz8m">
+      <bpmn:incoming>SequenceFlow_004dp26</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_004dp26" sourceRef="RequestApprovedUserTask" targetRef="EndEvent_07yoz8m" />
+    <bpmn:endEvent id="EndEvent_0sdeqpm">
+      <bpmn:incoming>SequenceFlow_0582fwb</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0582fwb" name="Отменить" sourceRef="AssignManagerToLoansErrorUserTask" targetRef="EndEvent_0sdeqpm">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0gtvetn" name="Перезапуск" sourceRef="AssignManagerToLoansErrorUserTask" targetRef="AssignManagerToLoansTask">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmn:error id="Error_1m0f888" name="SystemError" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="AssignLoanManagerProcess">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="173" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ju5ptb_di" bpmnElement="SequenceFlow_1ju5ptb">
+        <di:waypoint x="209" y="120" />
+        <di:waypoint x="306" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_0ahmbob_di" bpmnElement="ApproveAssignmentUserTask">
+        <dc:Bounds x="306" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1vsvbui_di" bpmnElement="SequenceFlow_1vsvbui">
+        <di:waypoint x="406" y="120" />
+        <di:waypoint x="589" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="466" y="102" width="65" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_1w5t7es_di" bpmnElement="AssignManagerToLoansTask">
+        <dc:Bounds x="589" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1bnx0bl_di" bpmnElement="SequenceFlow_1bnx0bl">
+        <di:waypoint x="356" y="160" />
+        <di:waypoint x="356" y="249" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="361" y="192" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="BoundaryEvent_04jcaye_di" bpmnElement="BoundaryEvent_0ejrv9o">
+        <dc:Bounds x="388" y="311" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1xv4g7p_di" bpmnElement="EndEvent_1xv4g7p">
+        <dc:Bounds x="388" y="383" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1dy74fu_di" bpmnElement="SequenceFlow_1dy74fu">
+        <di:waypoint x="406" y="347" />
+        <di:waypoint x="406" y="383" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_0d7hk3t_di" bpmnElement="EndEvent_0d7hk3t">
+        <dc:Bounds x="453" y="271" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1dkbe4a_di" bpmnElement="SequenceFlow_1dkbe4a">
+        <di:waypoint x="406" y="289" />
+        <di:waypoint x="453" y="289" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0mbywzv_di" bpmnElement="SequenceFlow_0mbywzv">
+        <di:waypoint x="689" y="120" />
+        <di:waypoint x="840" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1oqhrkd_di" bpmnElement="RequestDeclinedUserTask">
+        <dc:Bounds x="306" y="249" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1651ob7_di" bpmnElement="RequestApprovedUserTask">
+        <dc:Bounds x="840" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_0jx0yns_di" bpmnElement="BoundaryEvent_1e6cx5p">
+        <dc:Bounds x="671" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0znbnka_di" bpmnElement="SequenceFlow_0znbnka">
+        <di:waypoint x="689" y="178" />
+        <di:waypoint x="689" y="214" />
+        <di:waypoint x="639" y="214" />
+        <di:waypoint x="639" y="249" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_00e2ym3_di" bpmnElement="AssignManagerToLoansErrorUserTask">
+        <dc:Bounds x="589" y="249" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_0xh3q2u_di" bpmnElement="BoundaryEvent_0dv5a6t">
+        <dc:Bounds x="922" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_08wkvvl_di" bpmnElement="EndEvent_08wkvvl">
+        <dc:Bounds x="922" y="222" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0heifoc_di" bpmnElement="SequenceFlow_0heifoc">
+        <di:waypoint x="940" y="178" />
+        <di:waypoint x="940" y="222" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_07yoz8m_di" bpmnElement="EndEvent_07yoz8m">
+        <dc:Bounds x="1012" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_004dp26_di" bpmnElement="SequenceFlow_004dp26">
+        <di:waypoint x="940" y="120" />
+        <di:waypoint x="1012" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_0sdeqpm_di" bpmnElement="EndEvent_0sdeqpm">
+        <dc:Bounds x="778" y="271" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0582fwb_di" bpmnElement="SequenceFlow_0582fwb">
+        <di:waypoint x="689" y="289" />
+        <di:waypoint x="778" y="289" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="708" y="271" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0gtvetn_di" bpmnElement="SequenceFlow_0gtvetn">
+        <di:waypoint x="589" y="289" />
+        <di:waypoint x="546" y="289" />
+        <di:waypoint x="546" y="143" />
+        <di:waypoint x="589" y="143" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="531" y="213" width="60" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

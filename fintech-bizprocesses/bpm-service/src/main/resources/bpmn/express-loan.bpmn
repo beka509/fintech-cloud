@@ -1,0 +1,3092 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_073f9ub" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="2.2.4">
+  <bpmn:process id="ExpressLoanProcess" name="Экспресс-кредитование" isExecutable="true">
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1uqzv5q" name="Отменить заявку">
+      <bpmn:incoming>SequenceFlow_0baxgwu</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_1x7tgm6" name="CancelRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:userTask id="RegisterRequestServiceErrorTask" name="Обработка ошибок" camunda:formKey="/loans/express-loan/forms/error" camunda:assignee="${request.initiator}">
+      <bpmn:incoming>SequenceFlow_1pe4w3a</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_18wmcyl</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0ft64l2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="RegisterRequestService" name="Регистрация заявки" camunda:expression="${expressLoanService.registerRequest(execution)}">
+      <bpmn:incoming>SequenceFlow_0ft64l2</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_137imvb</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1y9z2po</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:intermediateCatchEvent id="IntermediateCatchEvent_1yzv4ph" name="CancelRequest" camunda:asyncBefore="true">
+      <bpmn:outgoing>SequenceFlow_00dcazy</bpmn:outgoing>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_1v8edyx" name="CancelRequest" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:endEvent id="EndEvent_0eebl6g">
+      <bpmn:incoming>SequenceFlow_0g79eqh</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="ServiceTask_0ls2o3a" name="Отмена заявки" camunda:asyncBefore="true" camunda:expression="${expressLoanService.cancelRequest(execution)}">
+      <bpmn:incoming>SequenceFlow_00dcazy</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0g79eqh</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:intermediateCatchEvent id="IntermediateCatchEvent_1tt0nx5" name="RejectRequest">
+      <bpmn:outgoing>SequenceFlow_1to7vsy</bpmn:outgoing>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_1adnuvk" name="RejectRequest" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:endEvent id="EndEvent_1fr0smb">
+      <bpmn:incoming>SequenceFlow_0s1s3at</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="ServiceTask_0z62qh4" name="Отклонение заявки" camunda:asyncBefore="true" camunda:expression="${expressLoanService.declineRequest(execution)}">
+      <bpmn:incoming>SequenceFlow_1to7vsy</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0s1s3at</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:startEvent id="StartEvent_0rhzdmn" name="Начало" camunda:initiator="initiator">
+      <bpmn:outgoing>SequenceFlow_137imvb</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="StandardInternalScreeningService" name="Проверка во внутренних базах" camunda:expression="${expressLoanInternalScreeningService.performStandardScreening(execution)}">
+      <bpmn:incoming>SequenceFlow_1ketppg</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1y9z2po</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0bnvk1o</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="StandardInternalScreeningServiceErrorTask" name="Обработка ошибок" camunda:formKey="/loans/express-loan/forms/error" camunda:assignee="${request.initiator}">
+      <bpmn:incoming>SequenceFlow_04zti35</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1ketppg</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0j1hve9</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1fxshqe" name="Отменить заявку">
+      <bpmn:incoming>SequenceFlow_1ll7nvv</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_07ggo9v" name="CancelRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_03pk1zb" name="Обнаружен в списках?">
+      <bpmn:incoming>SequenceFlow_0bnvk1o</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_19lgssg</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1rqgind</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0tagrec" name="ApproverRejectRequest">
+      <bpmn:incoming>SequenceFlow_0vh328m</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_1rd6kap" name="ApproverRejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:serviceTask id="ColvirCreditHistoryService" name="Запрос КИ из Colvir" camunda:expression="${expressLoanInternalScreeningService.requestForCreditHistory(execution)}">
+      <bpmn:incoming>SequenceFlow_1620d3o</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0z4awdf</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0cx4azc</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_04ht61k" name="Отменить заявку">
+      <bpmn:incoming>SequenceFlow_15ut4lx</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_12fsm5b" name="CancelRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:userTask id="ColvirCreditHistoryServiceErrorTask" name="Обработка ошибок" camunda:formKey="/loans/express-loan/forms/error" camunda:assignee="${request.initiator}">
+      <bpmn:incoming>SequenceFlow_15zxafu</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1620d3o</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1xunew8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1hn9exl" name="Сработали стоп-факторы?">
+      <bpmn:incoming>SequenceFlow_1uegubm</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1qw4dur</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1ouoxfn</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0ivqugx" name="RejectRequest">
+      <bpmn:incoming>SequenceFlow_0v49y0q</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_0m7rni4" name="RejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:userTask id="CompleteRequestInfoTask" name="Дополнение данных о клиенте" camunda:formKey="/loans/express-loan/forms/complete-request-info" camunda:candidateUsers="${expressLoanPerformersService.getCreditManagers(execution)}" camunda:candidateGroups="${expressLoanPerformersService.getCreditManagersGroup(execution)}">
+      <bpmn:incoming>SequenceFlow_1ixmbf9</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0wmrmgf</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1ppo7fd</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="TelemarketingNoticeTask" name="Уведомление об успешном прохождении проверок" camunda:formKey="/loans/express-loan/forms/telemarketing-notice" camunda:assignee="${request.initiator}">
+      <bpmn:incoming>SequenceFlow_0azlnau</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1qy53ia</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="RequestForCreditBureauReport" name="Запрос КИ из ПКБ" camunda:expression="${expressLoanExternalScreeningService.requestForCreditHistory(execution)}">
+      <bpmn:incoming>SequenceFlow_13dc8yj</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1j91983</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1f02ex4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="RequestForCreditBureauReportErrorTask" name="Обработка ошибок" camunda:formKey="/loans/express-loan/forms/error" camunda:assignee="${request.creditManager}">
+      <bpmn:incoming>SequenceFlow_1jzphwl</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_13dc8yj</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1hep94v</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1lzrvco" name="Сработали стоп-факторы?">
+      <bpmn:incoming>SequenceFlow_19yxqms</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1fyrmvp</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1j29dda</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="RequestForGcvpReport" name="Запрос отчета ГЦВП" camunda:expression="${expressLoanExternalScreeningService.requestForGcvpReport(execution)}">
+      <bpmn:incoming>SequenceFlow_1lcha2q</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0piv9ey</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_099buww</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="RequestForGcvpReportErrorTask" name="Обработка ошибок" camunda:formKey="/loans/express-loan/forms/error" camunda:assignee="${request.creditManager}">
+      <bpmn:incoming>SequenceFlow_0no6m6i</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1lcha2q</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1ncw5bw</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_19vzihg" name="Отменить заявку">
+      <bpmn:incoming>SequenceFlow_1hep94v</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_1qz9jux" name="CancelRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0qqcfys" name="Отменить заявку">
+      <bpmn:incoming>SequenceFlow_1ncw5bw</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_0wypore" name="CancelRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1wnqqpl">
+      <bpmn:incoming>SequenceFlow_00m9s4b</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_036yimh</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1ixmbf9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0lhi8ng" name="Заявка запущена ТМ?">
+      <bpmn:incoming>SequenceFlow_172r1p5</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_00m9s4b</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1qji8ud</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:parallelGateway id="ParallelGateway_0fojpwe">
+      <bpmn:incoming>SequenceFlow_1qji8ud</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0azlnau</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0jmuejm</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:parallelGateway id="ParallelGateway_1izrjwo">
+      <bpmn:incoming>SequenceFlow_0jmuejm</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_036yimh</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:endEvent id="EndEvent_1l4v5gk">
+      <bpmn:incoming>SequenceFlow_1qy53ia</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="EndEvent_06hdrn8">
+      <bpmn:incoming>SequenceFlow_0fdbh8j</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="CompleteLoanInfoTask" name="Дополнение данных о займе" camunda:formKey="/loans/express-loan/forms/complete-loan-info" camunda:assignee="${request.creditManager}">
+      <bpmn:incoming>SequenceFlow_05twzq7</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1knuo1f</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1a1f8l4</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_10ux5cn</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="CheckColvirCreditHistoryService" name="Проверка стоп-факторов КИ в Colvir" camunda:expression="${expressLoanInternalScreeningService.checkCreditHistoryStopFactors(execution)}">
+      <bpmn:incoming>SequenceFlow_01et6s3</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1uegubm</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="CheckCreditBureauStopFactors" name="Проверка стоп-факторов КИ в ПКБ" camunda:expression="${expressLoanExternalScreeningService.checkCreditHistoryStopFactors(execution)}">
+      <bpmn:incoming>SequenceFlow_1f02ex4</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_19yxqms</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0zcu9ax" name="RejectRequest">
+      <bpmn:incoming>SequenceFlow_0ke84ft</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_0kc5mv1" name="RejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1imo2xi" name="Отклонить">
+      <bpmn:incoming>SequenceFlow_10ux5cn</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0ke84ft</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0e2hlh3" name="Отклонить">
+      <bpmn:incoming>SequenceFlow_1rqgind</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0vh328m</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateCatchEvent id="IntermediateCatchEvent_15a66z0" name="ApproverRejectRequest">
+      <bpmn:outgoing>SequenceFlow_0t2cfy8</bpmn:outgoing>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_0xq2sa8" name="ApproverRejectRequest" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:endEvent id="EndEvent_1e69yg1">
+      <bpmn:incoming>SequenceFlow_0ki3nic</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="ServiceTask_1aoto60" name="Отклонение заявки" camunda:asyncBefore="true" camunda:expression="${expressLoanService.declineRequest(execution)}">
+      <bpmn:incoming>SequenceFlow_0t2cfy8</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_14nn4yc</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="CalculateScore" name="Скоринг" camunda:expression="${expressLoanScoringService.full(execution)}">
+      <bpmn:incoming>SequenceFlow_1a1f8l4</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1j5gmqe</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="DeclineNoticeTask" name="Уведомление об отклонении заявки" camunda:formKey="/loans/express-loan/forms/request-declined" camunda:candidateUsers="${expressLoanPerformersService.getCreditManagers(execution)}">
+      <bpmn:incoming>SequenceFlow_14nn4yc</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0ki3nic</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_1mks98r">
+      <bpmn:incoming>SequenceFlow_0bzj4ff</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_0fgkfv2" attachedToRef="RegisterRequestService">
+      <bpmn:outgoing>SequenceFlow_1pe4w3a</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_1er9ckf" errorRef="Error_0xfkw7s" />
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_1d7yvj5" attachedToRef="StandardInternalScreeningService">
+      <bpmn:outgoing>SequenceFlow_04zti35</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_1x0vki8" errorRef="Error_0xfkw7s" />
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_0z8t6on" attachedToRef="ColvirCreditHistoryService">
+      <bpmn:outgoing>SequenceFlow_15zxafu</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_055o6ps" />
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_01a5u18" attachedToRef="TelemarketingNoticeTask">
+      <bpmn:outgoing>SequenceFlow_0fdbh8j</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1ar1ct7">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P10D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_1o6t1z6" attachedToRef="RequestForCreditBureauReport">
+      <bpmn:outgoing>SequenceFlow_1jzphwl</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_04rs63l" />
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_1vovvr6" attachedToRef="RequestForGcvpReport">
+      <bpmn:outgoing>SequenceFlow_0no6m6i</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_1l0w3wp" />
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_0gu68jk" attachedToRef="DeclineNoticeTask">
+      <bpmn:outgoing>SequenceFlow_0bzj4ff</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_18edt7m">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P10D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_18wmcyl" sourceRef="RegisterRequestServiceErrorTask" targetRef="IntermediateThrowEvent_151l8v0">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1pe4w3a" sourceRef="BoundaryEvent_0fgkfv2" targetRef="RegisterRequestServiceErrorTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_0ft64l2" name="Перезапустить" sourceRef="RegisterRequestServiceErrorTask" targetRef="RegisterRequestService">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_137imvb" sourceRef="StartEvent_0rhzdmn" targetRef="RegisterRequestService" />
+    <bpmn:sequenceFlow id="SequenceFlow_1y9z2po" sourceRef="RegisterRequestService" targetRef="StandardInternalScreeningService" />
+    <bpmn:sequenceFlow id="SequenceFlow_00dcazy" sourceRef="IntermediateCatchEvent_1yzv4ph" targetRef="ServiceTask_0ls2o3a" />
+    <bpmn:sequenceFlow id="SequenceFlow_0g79eqh" sourceRef="ServiceTask_0ls2o3a" targetRef="EndEvent_0eebl6g" />
+    <bpmn:sequenceFlow id="SequenceFlow_1to7vsy" sourceRef="IntermediateCatchEvent_1tt0nx5" targetRef="ServiceTask_0z62qh4" />
+    <bpmn:sequenceFlow id="SequenceFlow_0s1s3at" sourceRef="ServiceTask_0z62qh4" targetRef="EndEvent_1fr0smb" />
+    <bpmn:sequenceFlow id="SequenceFlow_1ketppg" name="Перезапустить" sourceRef="StandardInternalScreeningServiceErrorTask" targetRef="StandardInternalScreeningService">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0bnvk1o" sourceRef="StandardInternalScreeningService" targetRef="ExclusiveGateway_03pk1zb" />
+    <bpmn:sequenceFlow id="SequenceFlow_04zti35" sourceRef="BoundaryEvent_1d7yvj5" targetRef="StandardInternalScreeningServiceErrorTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_0j1hve9" sourceRef="StandardInternalScreeningServiceErrorTask" targetRef="IntermediateThrowEvent_0o5hqpw">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_19lgssg" name="Нет&#10;&#10;" sourceRef="ExclusiveGateway_03pk1zb" targetRef="ExclusiveGateway_0juj9ac">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!expressLoanInternalScreeningService.standardScreeningFailed(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1rqgind" name="Да" sourceRef="ExclusiveGateway_03pk1zb" targetRef="IntermediateThrowEvent_0e2hlh3">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${expressLoanInternalScreeningService.standardScreeningFailed(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0vh328m" sourceRef="IntermediateThrowEvent_0e2hlh3" targetRef="IntermediateThrowEvent_0tagrec" />
+    <bpmn:sequenceFlow id="SequenceFlow_1620d3o" name="Перезапустить" sourceRef="ColvirCreditHistoryServiceErrorTask" targetRef="ColvirCreditHistoryService">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0cx4azc" sourceRef="ColvirCreditHistoryService" targetRef="DetectCustomerStatusService" />
+    <bpmn:sequenceFlow id="SequenceFlow_1xunew8" sourceRef="ColvirCreditHistoryServiceErrorTask" targetRef="IntermediateThrowEvent_1h8k621">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_15zxafu" sourceRef="BoundaryEvent_0z8t6on" targetRef="ColvirCreditHistoryServiceErrorTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_1uegubm" sourceRef="CheckColvirCreditHistoryService" targetRef="ExclusiveGateway_1hn9exl" />
+    <bpmn:sequenceFlow id="SequenceFlow_1qw4dur" name="Нет" sourceRef="ExclusiveGateway_1hn9exl" targetRef="ExclusiveGateway_0gilih6">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!expressLoanInternalScreeningService.creditHistoryFailed(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1ouoxfn" name="Да" sourceRef="ExclusiveGateway_1hn9exl" targetRef="FailedScreeningDecisionTask">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${expressLoanInternalScreeningService.creditHistoryFailed(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1ppo7fd" name="Отклонить" sourceRef="CompleteRequestInfoTask" targetRef="IntermediateThrowEvent_0jy3clv">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='DECLINE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1ixmbf9" sourceRef="ExclusiveGateway_1wnqqpl" targetRef="CompleteRequestInfoTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_0wmrmgf" name="Отправить на проверку" sourceRef="CompleteRequestInfoTask" targetRef="CalculateBasicScore">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='APPROVE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0azlnau" sourceRef="ParallelGateway_0fojpwe" targetRef="TelemarketingNoticeTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_1qy53ia" sourceRef="TelemarketingNoticeTask" targetRef="EndEvent_1l4v5gk" />
+    <bpmn:sequenceFlow id="SequenceFlow_13dc8yj" sourceRef="RequestForCreditBureauReportErrorTask" targetRef="RequestForCreditBureauReport">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1f02ex4" sourceRef="RequestForCreditBureauReport" targetRef="CheckCreditBureauStopFactors" />
+    <bpmn:sequenceFlow id="SequenceFlow_1jzphwl" sourceRef="BoundaryEvent_1o6t1z6" targetRef="RequestForCreditBureauReportErrorTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_1hep94v" sourceRef="RequestForCreditBureauReportErrorTask" targetRef="IntermediateThrowEvent_19vzihg">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_19yxqms" sourceRef="CheckCreditBureauStopFactors" targetRef="ExclusiveGateway_1lzrvco" />
+    <bpmn:sequenceFlow id="SequenceFlow_1fyrmvp" name="Нет" sourceRef="ExclusiveGateway_1lzrvco" targetRef="ExclusiveGateway_1u91l72">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!expressLoanExternalScreeningService.creditHistoryFailed(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1j29dda" name="Да" sourceRef="ExclusiveGateway_1lzrvco" targetRef="ExclusiveGateway_03rfw39">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${expressLoanExternalScreeningService.creditHistoryFailed(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1lcha2q" sourceRef="RequestForGcvpReportErrorTask" targetRef="RequestForGcvpReport">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0no6m6i" sourceRef="BoundaryEvent_1vovvr6" targetRef="RequestForGcvpReportErrorTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_1ncw5bw" sourceRef="RequestForGcvpReportErrorTask" targetRef="IntermediateThrowEvent_0qqcfys">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_00m9s4b" name="Нет" sourceRef="ExclusiveGateway_0lhi8ng" targetRef="ExclusiveGateway_1wnqqpl">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.initiator == request.creditManager}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_036yimh" sourceRef="ParallelGateway_1izrjwo" targetRef="ExclusiveGateway_1wnqqpl" />
+    <bpmn:sequenceFlow id="SequenceFlow_1qji8ud" name="Да" sourceRef="ExclusiveGateway_0lhi8ng" targetRef="ParallelGateway_0fojpwe">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.initiator != request.creditManager}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0jmuejm" sourceRef="ParallelGateway_0fojpwe" targetRef="ParallelGateway_1izrjwo" />
+    <bpmn:sequenceFlow id="SequenceFlow_0fdbh8j" sourceRef="BoundaryEvent_01a5u18" targetRef="EndEvent_06hdrn8" />
+    <bpmn:sequenceFlow id="SequenceFlow_1a1f8l4" name="Отправить" sourceRef="CompleteLoanInfoTask" targetRef="CalculateScore">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='APPROVE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_10ux5cn" sourceRef="CompleteLoanInfoTask" targetRef="IntermediateThrowEvent_1imo2xi">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='DECLINE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0ke84ft" sourceRef="IntermediateThrowEvent_1imo2xi" targetRef="IntermediateThrowEvent_0zcu9ax" />
+    <bpmn:sequenceFlow id="SequenceFlow_1j5gmqe" sourceRef="CalculateScore" targetRef="ExclusiveGateway_1ru7csh" />
+    <bpmn:sequenceFlow id="SequenceFlow_0t2cfy8" sourceRef="IntermediateCatchEvent_15a66z0" targetRef="ServiceTask_1aoto60" />
+    <bpmn:sequenceFlow id="SequenceFlow_0ki3nic" sourceRef="DeclineNoticeTask" targetRef="EndEvent_1e69yg1" />
+    <bpmn:sequenceFlow id="SequenceFlow_14nn4yc" sourceRef="ServiceTask_1aoto60" targetRef="DeclineNoticeTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_0bzj4ff" sourceRef="BoundaryEvent_0gu68jk" targetRef="EndEvent_1mks98r" />
+    <bpmn:sequenceFlow id="SequenceFlow_022rhwf" sourceRef="OfflineGcvpService" targetRef="ExclusiveGateway_0j83nyd" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_151l8v0" name="Отменить">
+      <bpmn:incoming>SequenceFlow_18wmcyl</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0baxgwu</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0baxgwu" sourceRef="IntermediateThrowEvent_151l8v0" targetRef="IntermediateThrowEvent_1uqzv5q" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0o5hqpw" name="Отменить">
+      <bpmn:incoming>SequenceFlow_0j1hve9</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1ll7nvv</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1ll7nvv" sourceRef="IntermediateThrowEvent_0o5hqpw" targetRef="IntermediateThrowEvent_1fxshqe" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_09ga1p6" name="Отменить заявку">
+      <bpmn:incoming>SequenceFlow_0fw4vgi</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_1d7mp7u" name="CancelRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:serviceTask id="OfflineGcvpService" name="Запрос в базу ПО" camunda:expression="${expressLoanInternalScreeningService.requestForGcvpReport(execution)}">
+      <bpmn:incoming>SequenceFlow_08o877d</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_17gnx2l</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_022rhwf</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="OfflineGcvpServiceErrorTask" name="Обработка ошибок" camunda:formKey="/loans/express-loan/forms/error" camunda:assignee="${request.initiator}">
+      <bpmn:incoming>SequenceFlow_0dlhcte</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_08o877d</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1f0jubh</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0mxrw2b" name="Отменить">
+      <bpmn:incoming>SequenceFlow_1f0jubh</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0fw4vgi</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_1gw9bsi" attachedToRef="OfflineGcvpService">
+      <bpmn:outgoing>SequenceFlow_0dlhcte</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_0t684ii" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0fw4vgi" sourceRef="IntermediateThrowEvent_0mxrw2b" targetRef="IntermediateThrowEvent_09ga1p6" />
+    <bpmn:sequenceFlow id="SequenceFlow_0dlhcte" sourceRef="BoundaryEvent_1gw9bsi" targetRef="OfflineGcvpServiceErrorTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_08o877d" name="Перезапустить" sourceRef="OfflineGcvpServiceErrorTask" targetRef="OfflineGcvpService">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1f0jubh" sourceRef="OfflineGcvpServiceErrorTask" targetRef="IntermediateThrowEvent_0mxrw2b">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1h8k621" name="Отменить">
+      <bpmn:incoming>SequenceFlow_1xunew8</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_15ut4lx</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_15ut4lx" sourceRef="IntermediateThrowEvent_1h8k621" targetRef="IntermediateThrowEvent_04ht61k" />
+    <bpmn:userTask id="FailedScreeningDecisionTask" name="Уведомление о несоответствии ПО/КИ" camunda:formKey="/loans/express-loan/forms/failed-screening-decision" camunda:assignee="${request.initiator}">
+      <bpmn:incoming>SequenceFlow_1ouoxfn</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1m45i43</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1u62hqt</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1m45i43" name="Отклонить" sourceRef="FailedScreeningDecisionTask" targetRef="EndEvent_0eaad2k">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='DECLINE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:intermediateThrowEvent id="EndEvent_0eaad2k" name="Отклонить">
+      <bpmn:incoming>SequenceFlow_1m45i43</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_18kny8r</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_18kny8r" sourceRef="EndEvent_0eaad2k" targetRef="IntermediateThrowEvent_0f99064" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0f99064" name="RejectRequest">
+      <bpmn:incoming>SequenceFlow_18kny8r</bpmn:incoming>
+      <bpmn:linkEventDefinition name="RejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0gilih6">
+      <bpmn:incoming>SequenceFlow_1qw4dur</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0ftvcuz</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_172r1p5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_172r1p5" sourceRef="ExclusiveGateway_0gilih6" targetRef="ExclusiveGateway_0lhi8ng" />
+    <bpmn:sequenceFlow id="SequenceFlow_1u62hqt" name="Вынести заявку на УО" sourceRef="FailedScreeningDecisionTask" targetRef="AuthorizedBodyTask">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='APPROVE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="AuthorizedBodyTask" name="Решение уполномоченного органа Банка" camunda:formKey="/loans/express-loan/forms/approvers/authorized-body" camunda:candidateGroups="${expressLoanPerformersService.authorizedBody(execution)}">
+      <bpmn:incoming>SequenceFlow_1u62hqt</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0ftvcuz</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0fk6628</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0ftvcuz" name="Согласовать" sourceRef="AuthorizedBodyTask" targetRef="ExclusiveGateway_0gilih6">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.approvers.authorizedBody.decision=='APPROVE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1rqtp2s" name="Отклонить">
+      <bpmn:incoming>SequenceFlow_0fk6628</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1ogo2wz</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0fk6628" name="Отклонить" sourceRef="AuthorizedBodyTask" targetRef="IntermediateThrowEvent_1rqtp2s">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.approvers.authorizedBody.decision=='DECLINE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1ogo2wz" sourceRef="IntermediateThrowEvent_1rqtp2s" targetRef="IntermediateThrowEvent_068ddkd" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_068ddkd" name="ApproverRejectRequest">
+      <bpmn:incoming>SequenceFlow_1ogo2wz</bpmn:incoming>
+      <bpmn:linkEventDefinition name="ApproverRejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0jy3clv">
+      <bpmn:incoming>SequenceFlow_1ppo7fd</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0v49y0q</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0v49y0q" sourceRef="IntermediateThrowEvent_0jy3clv" targetRef="IntermediateThrowEvent_0ivqugx" />
+    <bpmn:exclusiveGateway id="ExclusiveGateway_03rfw39" name="Заявка была согласована УО?">
+      <bpmn:incoming>SequenceFlow_1j29dda</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0gec70a</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_159bqmg</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1u91l72">
+      <bpmn:incoming>SequenceFlow_1fyrmvp</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0pmkvfm</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_13i1niw</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_0gec70a" name="Да" sourceRef="ExclusiveGateway_03rfw39" targetRef="ExclusiveGateway_0y71wh1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${expressLoanPerformersService.isApprovedByAuthorizedBody(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="FailedScreeningDecisionTask2" name="Уведомление о несоответствии ПО/КИ" camunda:formKey="/loans/express-loan/forms/failed-screening-decision" camunda:assignee="${request.initiator}">
+      <bpmn:incoming>SequenceFlow_159bqmg</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_01gfrjh</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1cbhdbl</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_10rtdzt" name="Отклонить">
+      <bpmn:incoming>SequenceFlow_01gfrjh</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0bf7yvt</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1q0mtcn" name="RejectRequest">
+      <bpmn:incoming>SequenceFlow_0bf7yvt</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_0xpc142" name="RejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0y71wh1">
+      <bpmn:incoming>SequenceFlow_1ixa4pa</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0gec70a</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0pmkvfm</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="AuthorizedBodyTask2" name="Решение уполномоченного органа Банка" camunda:formKey="/loans/express-loan/forms/approvers/authorized-body" camunda:candidateGroups="${expressLoanPerformersService.authorizedBody(execution)}">
+      <bpmn:incoming>SequenceFlow_1cbhdbl</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1ixa4pa</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0wknxng</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0ne1l8p" name="Отклонить">
+      <bpmn:incoming>SequenceFlow_0wknxng</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1fccugf</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0wusyde" name="ApproverRejectRequest">
+      <bpmn:incoming>SequenceFlow_1fccugf</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_0fl4m38" name="ApproverRejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_01gfrjh" name="Отклонить" sourceRef="FailedScreeningDecisionTask2" targetRef="IntermediateThrowEvent_10rtdzt">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='DECLINE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1cbhdbl" name="Вынести заявку на УО" sourceRef="FailedScreeningDecisionTask2" targetRef="AuthorizedBodyTask2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='APPROVE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0bf7yvt" sourceRef="IntermediateThrowEvent_10rtdzt" targetRef="IntermediateThrowEvent_1q0mtcn" />
+    <bpmn:sequenceFlow id="SequenceFlow_1ixa4pa" name="Согласовать" sourceRef="AuthorizedBodyTask2" targetRef="ExclusiveGateway_0y71wh1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.approvers.authorizedBody.decision=='APPROVE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0wknxng" name="Отклонить" sourceRef="AuthorizedBodyTask2" targetRef="IntermediateThrowEvent_0ne1l8p">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.approvers.authorizedBody.decision=='DECLINE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1fccugf" sourceRef="IntermediateThrowEvent_0ne1l8p" targetRef="IntermediateThrowEvent_0wusyde" />
+    <bpmn:sequenceFlow id="SequenceFlow_159bqmg" name="Нет" sourceRef="ExclusiveGateway_03rfw39" targetRef="FailedScreeningDecisionTask2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!expressLoanPerformersService.isApprovedByAuthorizedBody(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0pmkvfm" sourceRef="ExclusiveGateway_0y71wh1" targetRef="ExclusiveGateway_1u91l72" />
+    <bpmn:sequenceFlow id="SequenceFlow_13i1niw" sourceRef="ExclusiveGateway_1u91l72" targetRef="ExclusiveGateway_0tug8p4" />
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0tug8p4" name="Освобожден от ОПВ?">
+      <bpmn:incoming>SequenceFlow_13i1niw</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0piv9ey</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1vgpx14</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_0piv9ey" name="Нет" sourceRef="ExclusiveGateway_0tug8p4" targetRef="RequestForGcvpReport">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!expressLoanService.isPensionExempt(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1dlim9f">
+      <bpmn:incoming>SequenceFlow_1vgpx14</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_01j7uau</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1of8tmo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_1of8tmo" sourceRef="ExclusiveGateway_1dlim9f" targetRef="IntermediateThrowEvent_194omd2" />
+    <bpmn:sequenceFlow id="SequenceFlow_1vgpx14" name="Да" sourceRef="ExclusiveGateway_0tug8p4" targetRef="ExclusiveGateway_1dlim9f">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${expressLoanService.isPensionExempt(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="CalculateBasicScore" name="Упрощенный скоринг" camunda:expression="${expressLoanScoringService.basic(execution)}">
+      <bpmn:incoming>SequenceFlow_0wmrmgf</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1laislf</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0ipz7tr" name="Результат упрощенного скоринга">
+      <bpmn:incoming>SequenceFlow_1laislf</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1j91983</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_19lxiqo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_1laislf" sourceRef="CalculateBasicScore" targetRef="ExclusiveGateway_0ipz7tr" />
+    <bpmn:sequenceFlow id="SequenceFlow_1j91983" name="Зеленая, Серая" sourceRef="ExclusiveGateway_0ipz7tr" targetRef="RequestForCreditBureauReport">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.basicScoringResult.zone!='RED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0zyd6jy" name="Отлонить">
+      <bpmn:incoming>SequenceFlow_19lxiqo</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1jm8eh1</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_19lxiqo" name="Красная" sourceRef="ExclusiveGateway_0ipz7tr" targetRef="IntermediateThrowEvent_0zyd6jy">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.basicScoringResult.zone=='RED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1jm8eh1" sourceRef="IntermediateThrowEvent_0zyd6jy" targetRef="IntermediateThrowEvent_0ilwhnr" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0ilwhnr" name="ApproverRejectRequest">
+      <bpmn:incoming>SequenceFlow_1jm8eh1</bpmn:incoming>
+      <bpmn:linkEventDefinition name="ApproverRejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1ru7csh" name="Результат скоринга">
+      <bpmn:incoming>SequenceFlow_1j5gmqe</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_03k84j1</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1ret7x9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_03k84j1" name="Зеленая, Серая" sourceRef="ExclusiveGateway_1ru7csh" targetRef="ExclusiveGateway_1eyx6ee">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.scoringResult.zone!='RED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_10dzk0c" name="Отклонить">
+      <bpmn:incoming>SequenceFlow_1ret7x9</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0yx9knm</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1ret7x9" name="Красная" sourceRef="ExclusiveGateway_1ru7csh" targetRef="IntermediateThrowEvent_10dzk0c">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.scoringResult.zone=='RED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0yx9knm" sourceRef="IntermediateThrowEvent_10dzk0c" targetRef="IntermediateThrowEvent_1j9dztj" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1j9dztj" name="ApproverRejectRequest">
+      <bpmn:incoming>SequenceFlow_0yx9knm</bpmn:incoming>
+      <bpmn:linkEventDefinition name="ApproverRejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:userTask id="VerifierTask" name="Верификация" camunda:formKey="/loans/express-loan/forms/approvers/verifier" camunda:candidateGroups="${expressLoanPerformersService.verifiersGroup(execution)}">
+      <bpmn:incoming>SequenceFlow_08enlfw</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0mxlj7j</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0skafyz</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0qos6x3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1lpbye0" name="Отклонить">
+      <bpmn:incoming>SequenceFlow_0mxlj7j</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0hy1sre</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0mxlj7j" sourceRef="VerifierTask" targetRef="IntermediateThrowEvent_1lpbye0">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.approvers.verifier.decision=='DECLINE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0hy1sre" sourceRef="IntermediateThrowEvent_1lpbye0" targetRef="IntermediateThrowEvent_0k2dwl5" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0k2dwl5" name="ApproverRejectRequest">
+      <bpmn:incoming>SequenceFlow_0hy1sre</bpmn:incoming>
+      <bpmn:linkEventDefinition name="ApproverRejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0skafyz" name="На доработку" sourceRef="VerifierTask" targetRef="ExclusiveGateway_0bz8ere">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.approvers.verifier.decision=='REWORK'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_099buww" sourceRef="RequestForGcvpReport" targetRef="ExclusiveGateway_1pqhzbs" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_194omd2" name="Проверки успешно пройдены">
+      <bpmn:incoming>SequenceFlow_1of8tmo</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0gcpc35</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0gcpc35" sourceRef="IntermediateThrowEvent_194omd2" targetRef="IntermediateThrowEvent_1qrvo6i" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1qrvo6i" name="GotoSecondAct">
+      <bpmn:incoming>SequenceFlow_0gcpc35</bpmn:incoming>
+      <bpmn:linkEventDefinition name="GotoSecondAct" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateCatchEvent id="IntermediateThrowEvent_1tupnpi" name="GotoSecondAct">
+      <bpmn:outgoing>SequenceFlow_05twzq7</bpmn:outgoing>
+      <bpmn:linkEventDefinition name="GotoSecondAct" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_05twzq7" sourceRef="IntermediateThrowEvent_1tupnpi" targetRef="CompleteLoanInfoTask" />
+    <bpmn:exclusiveGateway id="ExclusiveGateway_13ab60o" name="Вынесена на УО?">
+      <bpmn:incoming>SequenceFlow_1wa4axs</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0z4cwu6</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1s7r20h</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_0qos6x3" name="Согласовать" sourceRef="VerifierTask" targetRef="ExclusiveGateway_1l43sl8">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.approvers.verifier.decision=='APPROVE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_02som6j" name="Клиент освобожден от уплаты ОПВ?">
+      <bpmn:incoming>SequenceFlow_0z4cwu6</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1acvztg</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1wtb6t2</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_0z4cwu6" name="Нет" sourceRef="ExclusiveGateway_13ab60o" targetRef="ExclusiveGateway_02som6j">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!expressLoanPerformersService.isApprovedByAuthorizedBody(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1nyii63" name="Результат скоринга">
+      <bpmn:incoming>SequenceFlow_1acvztg</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1oleo4v</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_08ezid5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_1acvztg" name="Нет" sourceRef="ExclusiveGateway_02som6j" targetRef="ExclusiveGateway_1nyii63">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!expressLoanService.isPensionExempt(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1oleo4v" name="Серая" sourceRef="ExclusiveGateway_1nyii63" targetRef="ExclusiveGateway_1nqjv0q">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.scoringResult.zone!='GREEN'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1eyx6ee" name="Заявка согласована верификатором?">
+      <bpmn:incoming>SequenceFlow_03k84j1</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_08enlfw</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0aldxh6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_08enlfw" name="Нет" sourceRef="ExclusiveGateway_1eyx6ee" targetRef="VerifierTask">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!expressLoanPerformersService.isApprovedByVerifier(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1l43sl8">
+      <bpmn:incoming>SequenceFlow_0qos6x3</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0aldxh6</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1wa4axs</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_1wa4axs" sourceRef="ExclusiveGateway_1l43sl8" targetRef="ExclusiveGateway_13ab60o" />
+    <bpmn:sequenceFlow id="SequenceFlow_0aldxh6" name="Да" sourceRef="ExclusiveGateway_1eyx6ee" targetRef="ExclusiveGateway_1l43sl8">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${expressLoanPerformersService.isApprovedByVerifier(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1xoj1nu">
+      <bpmn:incoming>SequenceFlow_1s7r20h</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0cwyksi</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0n2nn20</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_0n2nn20" sourceRef="ExclusiveGateway_1xoj1nu" targetRef="UnderwriterTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_1s7r20h" name="Да" sourceRef="ExclusiveGateway_13ab60o" targetRef="ExclusiveGateway_1xoj1nu">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${expressLoanPerformersService.isApprovedByAuthorizedBody(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1nqjv0q">
+      <bpmn:incoming>SequenceFlow_1wtb6t2</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1oleo4v</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0cwyksi</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_0cwyksi" sourceRef="ExclusiveGateway_1nqjv0q" targetRef="ExclusiveGateway_1xoj1nu" />
+    <bpmn:sequenceFlow id="SequenceFlow_1wtb6t2" name="Да" sourceRef="ExclusiveGateway_02som6j" targetRef="ExclusiveGateway_1nqjv0q">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${expressLoanService.isPensionExempt(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="UnderwriterTask" name="Рассмотрение заявки андеррайтером" camunda:formKey="/loans/express-loan/forms/approvers/underwriter" camunda:candidateGroups="${expressLoanPerformersService.underwritersGroup(execution)}">
+      <bpmn:incoming>SequenceFlow_0n2nn20</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1bzomeq</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1xt68q3</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1kxuc3b</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0fydu9v</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1kxuc3b" name="На службу безопасности" sourceRef="UnderwriterTask" targetRef="SecurityTask">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.approvers.underwriter.decision=='TO_SECURITY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_08ezid5" name="Зеленая" sourceRef="ExclusiveGateway_1nyii63" targetRef="IntermediateThrowEvent_1pk591g">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.scoringResult.zone=='GREEN'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="SecurityTask" name="Рассмотрение заявки службой безопасности" camunda:formKey="/loans/express-loan/forms/approvers/security" camunda:candidateGroups="${expressLoanPerformersService.securityGroup(execution)}">
+      <bpmn:incoming>SequenceFlow_1kxuc3b</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1wchs11</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_06k5gah</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_11azzki</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1pk591g" name="Создание займа">
+      <bpmn:incoming>SequenceFlow_08ezid5</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1bq6i5k</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1bq6i5k" sourceRef="IntermediateThrowEvent_1pk591g" targetRef="IntermediateThrowEvent_0xmx9wk" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0xmx9wk" name="GotoThirdAct">
+      <bpmn:incoming>SequenceFlow_1bq6i5k</bpmn:incoming>
+      <bpmn:linkEventDefinition name="GotoThirdAct" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0968do0" name="На доработку">
+      <bpmn:incoming>SequenceFlow_1xt68q3</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0xu2ocs</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1k76dxo" name="GotoSecondAct">
+      <bpmn:incoming>SequenceFlow_0xu2ocs</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_04d98ep" name="GotoSecondAct" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_077eoit" name="На доработку">
+      <bpmn:incoming>SequenceFlow_1wchs11</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_14oh91h</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0l1nr8e" name="GotoSecondAct">
+      <bpmn:incoming>SequenceFlow_14oh91h</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_0xjjis0" name="GotoSecondAct" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_14oh91h" sourceRef="IntermediateThrowEvent_077eoit" targetRef="IntermediateThrowEvent_0l1nr8e" />
+    <bpmn:sequenceFlow id="SequenceFlow_1xt68q3" sourceRef="UnderwriterTask" targetRef="IntermediateThrowEvent_0968do0">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.approvers.underwriter.decision=='REWORK'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0i15w5k" name="Отклонить">
+      <bpmn:incoming>SequenceFlow_1bzomeq</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0n4xghc</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1eorbjg" name="ApproverRejectRequest">
+      <bpmn:incoming>SequenceFlow_0n4xghc</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_0nw1ywp" name="ApproverRejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0n4xghc" sourceRef="IntermediateThrowEvent_0i15w5k" targetRef="IntermediateThrowEvent_1eorbjg" />
+    <bpmn:sequenceFlow id="SequenceFlow_1wchs11" sourceRef="SecurityTask" targetRef="IntermediateThrowEvent_077eoit">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.approvers.security.decision=='REWORK'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1bzomeq" sourceRef="UnderwriterTask" targetRef="IntermediateThrowEvent_0i15w5k">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.approvers.underwriter.decision=='DECLINE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0xu2ocs" sourceRef="IntermediateThrowEvent_0968do0" targetRef="IntermediateThrowEvent_1k76dxo" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_095h6ou" name="Согласовано">
+      <bpmn:incoming>SequenceFlow_0fydu9v</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_05kcuyf</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0fydu9v" sourceRef="UnderwriterTask" targetRef="IntermediateThrowEvent_095h6ou" />
+    <bpmn:sequenceFlow id="SequenceFlow_05kcuyf" sourceRef="IntermediateThrowEvent_095h6ou" targetRef="IntermediateThrowEvent_1hwmzjs" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1hwmzjs" name="GotoThirdAct">
+      <bpmn:incoming>SequenceFlow_05kcuyf</bpmn:incoming>
+      <bpmn:linkEventDefinition name="GotoThirdAct" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_07dwb6n" name="Отклонить">
+      <bpmn:incoming>SequenceFlow_06k5gah</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_12fyt6g</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_06k5gah" sourceRef="SecurityTask" targetRef="IntermediateThrowEvent_07dwb6n">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.approvers.security.decision=='DECLINE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_12fyt6g" sourceRef="IntermediateThrowEvent_07dwb6n" targetRef="IntermediateThrowEvent_0fhbthj" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0fhbthj" name="ApproverRejectRequest">
+      <bpmn:incoming>SequenceFlow_12fyt6g</bpmn:incoming>
+      <bpmn:linkEventDefinition name="ApproverRejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0le704m" name="Согласовать">
+      <bpmn:incoming>SequenceFlow_11azzki</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_12rkgnz</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_11azzki" sourceRef="SecurityTask" targetRef="IntermediateThrowEvent_0le704m" />
+    <bpmn:sequenceFlow id="SequenceFlow_12rkgnz" sourceRef="IntermediateThrowEvent_0le704m" targetRef="IntermediateThrowEvent_1an1zxo" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1an1zxo" name="GotoThirdAct">
+      <bpmn:incoming>SequenceFlow_12rkgnz</bpmn:incoming>
+      <bpmn:linkEventDefinition name="GotoThirdAct" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateCatchEvent id="IntermediateThrowEvent_0cf1zue" name="GotoThirdAct">
+      <bpmn:outgoing>SequenceFlow_1y08mkr</bpmn:outgoing>
+      <bpmn:linkEventDefinition name="GotoThirdAct" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="StandardInternalScreeningService2" name="Проверка во внутренних базах" camunda:expression="${expressLoanInternalScreeningService.performStandardScreening(execution)}">
+      <bpmn:incoming>SequenceFlow_0yd0w60</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1yjdk2o</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_02dab2s</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="StandardInternalScreeningServiceErrorTask2" name="Обработка ошибок" camunda:formKey="/loans/express-loan/forms/error" camunda:assignee="${request.creditManager}">
+      <bpmn:incoming>SequenceFlow_0um9at4</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0yd0w60</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0cywgwk</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1dwfypq" name="Отменить заявку">
+      <bpmn:incoming>SequenceFlow_1o81jrt</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_15c1w21" name="CancelRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1tje81x" name="Отменить">
+      <bpmn:incoming>SequenceFlow_0cywgwk</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1o81jrt</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_1w17zz8" attachedToRef="StandardInternalScreeningService2">
+      <bpmn:outgoing>SequenceFlow_0um9at4</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_0e2jeh8" errorRef="Error_0xfkw7s" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0yd0w60" name="Перезапустить" sourceRef="StandardInternalScreeningServiceErrorTask2" targetRef="StandardInternalScreeningService2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0um9at4" sourceRef="BoundaryEvent_1w17zz8" targetRef="StandardInternalScreeningServiceErrorTask2" />
+    <bpmn:sequenceFlow id="SequenceFlow_0cywgwk" sourceRef="StandardInternalScreeningServiceErrorTask2" targetRef="IntermediateThrowEvent_1tje81x">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1o81jrt" sourceRef="IntermediateThrowEvent_1tje81x" targetRef="IntermediateThrowEvent_1dwfypq" />
+    <bpmn:sequenceFlow id="SequenceFlow_1y08mkr" sourceRef="IntermediateThrowEvent_0cf1zue" targetRef="SuccessNoticeTask" />
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1on1xqh" name="Обнаружен в списках?">
+      <bpmn:incoming>SequenceFlow_02dab2s</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1sqntnw</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1r1d4g2</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0tdp192" name="ApproverRejectRequest">
+      <bpmn:incoming>SequenceFlow_17m0b3z</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_0qu185e" name="ApproverRejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1rcl052" name="Отклонить">
+      <bpmn:incoming>SequenceFlow_1r1d4g2</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_17m0b3z</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_096009t" name="Отменить заявку">
+      <bpmn:incoming>SequenceFlow_0bisryd</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_146lxvf" name="CancelRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:serviceTask id="CreateCustomerCard" name="Создание карточки клиента" camunda:expression="${expressLoanColvirService.createCustomerCard(execution)}">
+      <bpmn:incoming>SequenceFlow_1sqntnw</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1euo3pt</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0gvlrr4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="CreateCustomerCardErrorTask" name="Обработка ошибок" camunda:formKey="/loans/express-loan/forms/error" camunda:assignee="${request.creditManager}">
+      <bpmn:incoming>SequenceFlow_03pcxq9</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1euo3pt</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_16moie8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1yuixfh" name="Отменить">
+      <bpmn:incoming>SequenceFlow_16moie8</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0bisryd</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_0qwvtws" attachedToRef="CreateCustomerCard">
+      <bpmn:outgoing>SequenceFlow_03pcxq9</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_1rtmmuu" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1sqntnw" name="Нет&#10;&#10;" sourceRef="ExclusiveGateway_1on1xqh" targetRef="CreateCustomerCard">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!expressLoanInternalScreeningService.standardScreeningFailed(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1r1d4g2" name="Да" sourceRef="ExclusiveGateway_1on1xqh" targetRef="IntermediateThrowEvent_1rcl052">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${expressLoanInternalScreeningService.standardScreeningFailed(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_17m0b3z" sourceRef="IntermediateThrowEvent_1rcl052" targetRef="IntermediateThrowEvent_0tdp192" />
+    <bpmn:sequenceFlow id="SequenceFlow_0bisryd" sourceRef="IntermediateThrowEvent_1yuixfh" targetRef="IntermediateThrowEvent_096009t" />
+    <bpmn:sequenceFlow id="SequenceFlow_1euo3pt" name="Перезапустить" sourceRef="CreateCustomerCardErrorTask" targetRef="CreateCustomerCard">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_03pcxq9" sourceRef="BoundaryEvent_0qwvtws" targetRef="CreateCustomerCardErrorTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_16moie8" sourceRef="CreateCustomerCardErrorTask" targetRef="IntermediateThrowEvent_1yuixfh">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_02dab2s" sourceRef="StandardInternalScreeningService2" targetRef="ExclusiveGateway_1on1xqh" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1o7zkwb" name="Отменить заявку">
+      <bpmn:incoming>SequenceFlow_01pg8hu</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_1knkrdx" name="CancelRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_019g88w" name="Отменить">
+      <bpmn:incoming>SequenceFlow_03qt43r</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_01pg8hu</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:serviceTask id="CreateCurrentAccount" name="Открытие текущего счета" camunda:expression="${expressLoanColvirService.createCurrentAccount(execution)}">
+      <bpmn:incoming>SequenceFlow_1enhc4l</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0gvlrr4</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1s33uf0</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="CreateCurrentAccountErrorTask" name="Обработка ошибок" camunda:formKey="/loans/express-loan/forms/error" camunda:assignee="${request.creditManager}">
+      <bpmn:incoming>SequenceFlow_11ybsb3</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_03qt43r</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1enhc4l</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="BoundaryEvent_1m7x6ms" attachedToRef="CreateCurrentAccount">
+      <bpmn:outgoing>SequenceFlow_11ybsb3</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_0adg4je" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_01pg8hu" sourceRef="IntermediateThrowEvent_019g88w" targetRef="IntermediateThrowEvent_1o7zkwb" />
+    <bpmn:sequenceFlow id="SequenceFlow_03qt43r" sourceRef="CreateCurrentAccountErrorTask" targetRef="IntermediateThrowEvent_019g88w">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_11ybsb3" sourceRef="BoundaryEvent_1m7x6ms" targetRef="CreateCurrentAccountErrorTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_1enhc4l" name="Перезапустить" sourceRef="CreateCurrentAccountErrorTask" targetRef="CreateCurrentAccount">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0usdjz6" name="Отменить заявку">
+      <bpmn:incoming>SequenceFlow_1jytj9h</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_156w7np" name="CancelRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0mvgnlo" name="Отменить">
+      <bpmn:incoming>SequenceFlow_0rtblen</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1jytj9h</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:serviceTask id="RegisterLoan" name="Посадка займа в состоянии &#34;Зарегистрирован&#34;" camunda:expression="${expressLoanColvirService.registerLoan(execution)}">
+      <bpmn:incoming>SequenceFlow_0w1gfno</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1s33uf0</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1mdna7q</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="RegisterLoanErrorTask" name="Обработка ошибок" camunda:formKey="/loans/express-loan/forms/error" camunda:assignee="${request.creditManager}">
+      <bpmn:incoming>SequenceFlow_0u1gss4</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0rtblen</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0w1gfno</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="BoundaryEvent_0sgsqes" attachedToRef="RegisterLoan">
+      <bpmn:outgoing>SequenceFlow_0u1gss4</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_00vypoa" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1jytj9h" sourceRef="IntermediateThrowEvent_0mvgnlo" targetRef="IntermediateThrowEvent_0usdjz6" />
+    <bpmn:sequenceFlow id="SequenceFlow_0rtblen" sourceRef="RegisterLoanErrorTask" targetRef="IntermediateThrowEvent_0mvgnlo">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0u1gss4" sourceRef="BoundaryEvent_0sgsqes" targetRef="RegisterLoanErrorTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_0w1gfno" name="Перезапустить" sourceRef="RegisterLoanErrorTask" targetRef="RegisterLoan">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0gvlrr4" sourceRef="CreateCustomerCard" targetRef="CreateCurrentAccount" />
+    <bpmn:sequenceFlow id="SequenceFlow_1s33uf0" sourceRef="CreateCurrentAccount" targetRef="RegisterLoan" />
+    <bpmn:sequenceFlow id="SequenceFlow_1mdna7q" sourceRef="RegisterLoan" targetRef="CalculateRepaymentSchedule" />
+    <bpmn:userTask id="SignAgreementTask" name="Подписание договора с клиентом" camunda:formKey="/loans/express-loan/forms/sign-agreement" camunda:assignee="${request.creditManager}">
+      <bpmn:incoming>SequenceFlow_0ivsmou</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_148qnu2</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1pigpuq</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="ActualizeLoan" name="Перевод займа в состояние &#34;Актуален&#34;" camunda:expression="${expressLoanColvirService.actualizeLoan(execution)}">
+      <bpmn:incoming>SequenceFlow_0049zo4</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_148qnu2</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1f7b73p</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="ActualizeLoanErrorTask" name="Обработка ошибок" camunda:formKey="/loans/express-loan/forms/error" camunda:assignee="${request.creditManager}">
+      <bpmn:incoming>SequenceFlow_0knq1dh</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0049zo4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="BoundaryEvent_0y7eb1m" attachedToRef="ActualizeLoan">
+      <bpmn:outgoing>SequenceFlow_0knq1dh</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_0k1is46" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0knq1dh" sourceRef="BoundaryEvent_0y7eb1m" targetRef="ActualizeLoanErrorTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_0049zo4" name="Перезапустить" sourceRef="ActualizeLoanErrorTask" targetRef="ActualizeLoan" />
+    <bpmn:sequenceFlow id="SequenceFlow_148qnu2" name="Отправить" sourceRef="SignAgreementTask" targetRef="ActualizeLoan">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='APPROVE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="DeleteLoan" name="Удаление займа" camunda:expression="${expressLoanColvirService.refuseLoan(execution)}">
+      <bpmn:incoming>SequenceFlow_1xnvax1</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1pigpuq</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1v3r45g</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1x2kn7d</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="DeleteLoanErrorTask" name="Обработка ошибок" camunda:formKey="/loans/express-loan/forms/error" camunda:assignee="${request.creditManager}">
+      <bpmn:incoming>SequenceFlow_0wshb62</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1xnvax1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="BoundaryEvent_1hjuinu" attachedToRef="DeleteLoan">
+      <bpmn:outgoing>SequenceFlow_0wshb62</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_03mtjb1" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1xnvax1" sourceRef="DeleteLoanErrorTask" targetRef="DeleteLoan" />
+    <bpmn:sequenceFlow id="SequenceFlow_0wshb62" sourceRef="BoundaryEvent_1hjuinu" targetRef="DeleteLoanErrorTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_1pigpuq" name="Отклонить" sourceRef="SignAgreementTask" targetRef="DeleteLoan">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='DECLINE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1lpchdi" name="Займ удален">
+      <bpmn:incoming>SequenceFlow_1x2kn7d</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0lw6nyh</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1x2kn7d" sourceRef="DeleteLoan" targetRef="IntermediateThrowEvent_1lpchdi" />
+    <bpmn:sequenceFlow id="SequenceFlow_0lw6nyh" sourceRef="IntermediateThrowEvent_1lpchdi" targetRef="IntermediateThrowEvent_1s8l118" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1s8l118" name="RejectRequest">
+      <bpmn:incoming>SequenceFlow_0lw6nyh</bpmn:incoming>
+      <bpmn:linkEventDefinition name="RejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:userTask id="CreditDossierTask" name="Подготовка кредитного досье" camunda:formKey="/loans/express-loan/forms/credit-dossier" camunda:assignee="${request.creditManager}">
+      <bpmn:incoming>SequenceFlow_1f7b73p</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_012ryan</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_15ec6q0</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1f7b73p" sourceRef="ActualizeLoan" targetRef="CreditDossierTask" />
+    <bpmn:userTask id="CheckCreditDossierTask" name="Проверка кредитного досье" camunda:formKey="/loans/express-loan/forms/approvers/credit-admin" camunda:candidateGroups="${expressLoanPerformersService.creditAdminsGroup(execution)}">
+      <bpmn:incoming>SequenceFlow_15ec6q0</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_012ryan</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0w7kim4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_15ec6q0" sourceRef="CreditDossierTask" targetRef="CheckCreditDossierTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_012ryan" name="На доработку" sourceRef="CheckCreditDossierTask" targetRef="CreditDossierTask">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.approvers.creditAdmin.decision=='REWORK'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="ApproveRequest" name="Одобрение заявки" camunda:expression="${expressLoanService.approveRequest(execution)}">
+      <bpmn:incoming>SequenceFlow_0w7kim4</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1y8ha07</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0w7kim4" name="Согласовать" sourceRef="CheckCreditDossierTask" targetRef="ApproveRequest">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.approvers.creditAdmin.decision=='APPROVE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="EndEvent_1mj8z9j">
+      <bpmn:incoming>SequenceFlow_1y8ha07</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1y8ha07" sourceRef="ApproveRequest" targetRef="EndEvent_1mj8z9j" />
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0bz8ere" name="Количество доаботок меньше трех?">
+      <bpmn:incoming>SequenceFlow_0skafyz</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1knuo1f</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0e5pppg</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_1knuo1f" name="Да" sourceRef="ExclusiveGateway_0bz8ere" targetRef="CompleteLoanInfoTask">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.approvers.verifier.reworkCount&lt;3}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_04u6imn" name="Отклонить">
+      <bpmn:incoming>SequenceFlow_0e5pppg</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1j5o7j5</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0e5pppg" name="Нет" sourceRef="ExclusiveGateway_0bz8ere" targetRef="IntermediateThrowEvent_04u6imn">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${request.approvers.verifier.reworkCount&gt;=3}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1j5o7j5" sourceRef="IntermediateThrowEvent_04u6imn" targetRef="IntermediateThrowEvent_1p39ro0" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1p39ro0" name="ApproverRejectRequest">
+      <bpmn:incoming>SequenceFlow_1j5o7j5</bpmn:incoming>
+      <bpmn:linkEventDefinition name="ApproverRejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_0nwzwkd" attachedToRef="FailedScreeningDecisionTask">
+      <bpmn:outgoing>SequenceFlow_17795nu</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">${expressLoanService.timeout(3*24)}</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_17795nu" sourceRef="BoundaryEvent_0nwzwkd" targetRef="IntermediateThrowEvent_0z478qy" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0z478qy" name="CancelRequest">
+      <bpmn:incoming>SequenceFlow_17795nu</bpmn:incoming>
+      <bpmn:linkEventDefinition name="CancelRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_0br0zyw" attachedToRef="CompleteRequestInfoTask">
+      <bpmn:outgoing>SequenceFlow_1n4oo7b</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">${expressLoanService.timeout(3*24)}</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1n4oo7b" sourceRef="BoundaryEvent_0br0zyw" targetRef="IntermediateThrowEvent_0rae6pl" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0rae6pl" name="CancelRequest">
+      <bpmn:incoming>SequenceFlow_1n4oo7b</bpmn:incoming>
+      <bpmn:linkEventDefinition name="CancelRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_0ptqvbn" attachedToRef="FailedScreeningDecisionTask2">
+      <bpmn:outgoing>SequenceFlow_0dqxpj1</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">${expressLoanService.timeout(3*24)}</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0dqxpj1" sourceRef="BoundaryEvent_0ptqvbn" targetRef="IntermediateThrowEvent_14bq3a4" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_14bq3a4" name="CancelRequest">
+      <bpmn:incoming>SequenceFlow_0dqxpj1</bpmn:incoming>
+      <bpmn:linkEventDefinition name="CancelRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_18qqbvy" attachedToRef="CompleteLoanInfoTask">
+      <bpmn:outgoing>SequenceFlow_0mbadf4</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">${expressLoanService.timeout(3*24)}</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0mbadf4" sourceRef="BoundaryEvent_18qqbvy" targetRef="IntermediateThrowEvent_0mhys7w" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0mhys7w" name="CancelRequest">
+      <bpmn:incoming>SequenceFlow_0mbadf4</bpmn:incoming>
+      <bpmn:linkEventDefinition name="CancelRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_1t7cpfs" attachedToRef="SignAgreementTask">
+      <bpmn:outgoing>SequenceFlow_1v3r45g</bpmn:outgoing>
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">${expressLoanService.timeout(2*24)}</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1v3r45g" sourceRef="BoundaryEvent_1t7cpfs" targetRef="DeleteLoan" />
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0juj9ac" name="Освобожден от уплаты ОПВ?">
+      <bpmn:incoming>SequenceFlow_19lgssg</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1iitvuz</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_17gnx2l</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1wb1lbr">
+      <bpmn:incoming>SequenceFlow_1iitvuz</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_082hv6l</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0z4awdf</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_0z4awdf" sourceRef="ExclusiveGateway_1wb1lbr" targetRef="ColvirCreditHistoryService" />
+    <bpmn:sequenceFlow id="SequenceFlow_1iitvuz" name="Да" sourceRef="ExclusiveGateway_0juj9ac" targetRef="ExclusiveGateway_1wb1lbr">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${expressLoanService.isPensionExempt(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0j83nyd" name="Соответствует условиям кредитования?">
+      <bpmn:incoming>SequenceFlow_022rhwf</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_082hv6l</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0tenkyn</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_082hv6l" name="Да" sourceRef="ExclusiveGateway_0j83nyd" targetRef="ExclusiveGateway_1wb1lbr">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${expressLoanInternalScreeningService.isGcvpReportValid(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0dsj20a" name="Отклонить">
+      <bpmn:incoming>SequenceFlow_0tenkyn</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1ps0yeh</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0tenkyn" name="Нет" sourceRef="ExclusiveGateway_0j83nyd" targetRef="IntermediateThrowEvent_0dsj20a">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!expressLoanInternalScreeningService.isGcvpReportValid(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_17gnx2l" name="Нет" sourceRef="ExclusiveGateway_0juj9ac" targetRef="OfflineGcvpService">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!expressLoanService.isPensionExempt(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_1ps0yeh" sourceRef="IntermediateThrowEvent_0dsj20a" targetRef="IntermediateThrowEvent_0g0tpwu" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0g0tpwu" name="ApproverRejectRequest">
+      <bpmn:incoming>SequenceFlow_1ps0yeh</bpmn:incoming>
+      <bpmn:linkEventDefinition name="ApproverRejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1pqhzbs" name="Соответствует условиям кредитования">
+      <bpmn:incoming>SequenceFlow_099buww</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_01j7uau</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1hczexe</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_01j7uau" name="Да" sourceRef="ExclusiveGateway_1pqhzbs" targetRef="ExclusiveGateway_1dlim9f">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${expressLoanExternalScreeningService.isGcvpReportValid(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0hl96lv" name="Отклонить">
+      <bpmn:incoming>SequenceFlow_1hczexe</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0pzxx7a</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1hczexe" name="Нет" sourceRef="ExclusiveGateway_1pqhzbs" targetRef="IntermediateThrowEvent_0hl96lv">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!expressLoanExternalScreeningService.isGcvpReportValid(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0pzxx7a" sourceRef="IntermediateThrowEvent_0hl96lv" targetRef="IntermediateThrowEvent_1oxsgb7" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1oxsgb7" name="ApproverRejectRequest">
+      <bpmn:incoming>SequenceFlow_0pzxx7a</bpmn:incoming>
+      <bpmn:linkEventDefinition name="ApproverRejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0tg984a" name="RejectRequest">
+      <bpmn:incoming>SequenceFlow_1hymf5t</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_1rgtt2h" name="RejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:userTask id="SuccessNoticeTask" name="Извещение клиента о положительном решении" camunda:formKey="/loans/express-loan/forms/success-notice" camunda:assignee="${request.creditManager}">
+      <bpmn:incoming>SequenceFlow_1y08mkr</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0cb9lu7</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_116cmvp</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_02ehhna">
+      <bpmn:incoming>SequenceFlow_0cb9lu7</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0mv94x6</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1hymf5t</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_19ndgfz" attachedToRef="SuccessNoticeTask">
+      <bpmn:outgoing>SequenceFlow_0mv94x6</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_0qv8p9z">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">${expressLoanService.timeout(15*24)}</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1hymf5t" sourceRef="IntermediateThrowEvent_02ehhna" targetRef="IntermediateThrowEvent_0tg984a" />
+    <bpmn:sequenceFlow id="SequenceFlow_0cb9lu7" name="Отклонить" sourceRef="SuccessNoticeTask" targetRef="IntermediateThrowEvent_02ehhna">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='DECLINE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_116cmvp" name="Клиент согласен" sourceRef="SuccessNoticeTask" targetRef="ExclusiveGateway_0hx1b2g">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='APPROVE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0mv94x6" sourceRef="BoundaryEvent_19ndgfz" targetRef="IntermediateThrowEvent_02ehhna" />
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0hx1b2g" name="Превышена сумма кредитного портфеля?">
+      <bpmn:incoming>SequenceFlow_116cmvp</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1yjdk2o</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1mo15cw</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_1yjdk2o" name="Нет" sourceRef="ExclusiveGateway_0hx1b2g" targetRef="StandardInternalScreeningService2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${!expressLoanInternalScreeningService.isLoanPortfolioSizeExceeds(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1xzn2i9" name="Отклонить">
+      <bpmn:incoming>SequenceFlow_1mo15cw</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0v41szo</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1mo15cw" name="Да" sourceRef="ExclusiveGateway_0hx1b2g" targetRef="IntermediateThrowEvent_1xzn2i9">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${expressLoanInternalScreeningService.isLoanPortfolioSizeExceeds(execution)}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0v41szo" sourceRef="IntermediateThrowEvent_1xzn2i9" targetRef="IntermediateThrowEvent_1uefjdg" />
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_1uefjdg" name="ApproverRejectRequest">
+      <bpmn:incoming>SequenceFlow_0v41szo</bpmn:incoming>
+      <bpmn:linkEventDefinition name="ApproverRejectRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:serviceTask id="CalculateRepaymentSchedule" name="Расчет графика погашения" camunda:expression="${expressLoanColvirService.calculateRepaymentSchedule(execution)}">
+      <bpmn:incoming>SequenceFlow_072k3np</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1mdna7q</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0ivsmou</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="CalculateRepaymentScheduleErrorTask" name="Обработка ошибок" camunda:formKey="/loans/express-loan/forms/error" camunda:assignee="${request.creditManager}">
+      <bpmn:incoming>SequenceFlow_1684zv5</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_072k3np</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="BoundaryEvent_0f09jmg" attachedToRef="CalculateRepaymentSchedule">
+      <bpmn:outgoing>SequenceFlow_1684zv5</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_1xz1f7e" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_072k3np" sourceRef="CalculateRepaymentScheduleErrorTask" targetRef="CalculateRepaymentSchedule" />
+    <bpmn:sequenceFlow id="SequenceFlow_1684zv5" sourceRef="BoundaryEvent_0f09jmg" targetRef="CalculateRepaymentScheduleErrorTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_0ivsmou" sourceRef="CalculateRepaymentSchedule" targetRef="SignAgreementTask" />
+    <bpmn:serviceTask id="DetectCustomerStatusService" name="Определение статуса клиента" camunda:expression="${expressLoanService.detectCustomerStatus(execution)}">
+      <bpmn:incoming>SequenceFlow_0ls3dbh</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0cx4azc</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_01et6s3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:userTask id="DetectCustomerStatusErrorTask" name="Обработка ошибок" camunda:formKey="/loans/express-loan/forms/error" camunda:assignee="${request.initiator}">
+      <bpmn:incoming>SequenceFlow_0egty03</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0ls3dbh</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1tqirt5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0su5yzy" name="Отменить заявку">
+      <bpmn:incoming>SequenceFlow_0dzzw98</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_1hlqou9" name="CancelRequest" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="IntermediateThrowEvent_0425kka" name="Отменить">
+      <bpmn:incoming>SequenceFlow_1tqirt5</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0dzzw98</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:boundaryEvent id="BoundaryEvent_1my8yiu" attachedToRef="DetectCustomerStatusService">
+      <bpmn:outgoing>SequenceFlow_0egty03</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_1wdp9p4" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0ls3dbh" name="Перезапустить" sourceRef="DetectCustomerStatusErrorTask" targetRef="DetectCustomerStatusService">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0egty03" sourceRef="BoundaryEvent_1my8yiu" targetRef="DetectCustomerStatusErrorTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_1tqirt5" sourceRef="DetectCustomerStatusErrorTask" targetRef="IntermediateThrowEvent_0425kka">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0dzzw98" sourceRef="IntermediateThrowEvent_0425kka" targetRef="IntermediateThrowEvent_0su5yzy" />
+    <bpmn:sequenceFlow id="SequenceFlow_01et6s3" sourceRef="DetectCustomerStatusService" targetRef="CheckColvirCreditHistoryService" />
+  </bpmn:process>
+  <bpmn:error id="Error_0xfkw7s" name="SystemError" errorCode="SystemError" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="ExpressLoanProcess">
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1uqzv5q_di" bpmnElement="IntermediateThrowEvent_1uqzv5q">
+        <dc:Bounds x="394" y="420" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="369" y="463" width="88" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0xg5apb_di" bpmnElement="RegisterRequestServiceErrorTask">
+        <dc:Bounds x="233" y="287" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1po4o3d_di" bpmnElement="RegisterRequestService">
+        <dc:Bounds x="233" y="119" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateCatchEvent_1yzv4ph_di" bpmnElement="IntermediateCatchEvent_1yzv4ph">
+        <dc:Bounds x="95" y="1457" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="75" y="1500" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0eebl6g_di" bpmnElement="EndEvent_0eebl6g">
+        <dc:Bounds x="365" y="1457" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0ls2o3a_di" bpmnElement="ServiceTask_0ls2o3a">
+        <dc:Bounds x="183" y="1435" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateCatchEvent_1tt0nx5_di" bpmnElement="IntermediateCatchEvent_1tt0nx5">
+        <dc:Bounds x="95" y="1575" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="80" y="1618" width="74" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1fr0smb_di" bpmnElement="EndEvent_1fr0smb">
+        <dc:Bounds x="363" y="1575" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0z62qh4_di" bpmnElement="ServiceTask_0z62qh4">
+        <dc:Bounds x="181" y="1553" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_0rhzdmn_di" bpmnElement="StartEvent_0rhzdmn">
+        <dc:Bounds x="97" y="141" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="96" y="184" width="39" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0m84est_di" bpmnElement="StandardInternalScreeningService">
+        <dc:Bounds x="557" y="119" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1wvobnw_di" bpmnElement="StandardInternalScreeningServiceErrorTask">
+        <dc:Bounds x="557" y="287" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1fxshqe_di" bpmnElement="IntermediateThrowEvent_1fxshqe">
+        <dc:Bounds x="726" y="420" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="701" y="463" width="88" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_03pk1zb_di" bpmnElement="ExclusiveGateway_03pk1zb" isMarkerVisible="true">
+        <dc:Bounds x="820" y="134" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="811" y="98" width="68" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0tagrec_di" bpmnElement="IntermediateThrowEvent_0tagrec">
+        <dc:Bounds x="827" y="309" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="804" y="352" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0796gtu_di" bpmnElement="ColvirCreditHistoryService">
+        <dc:Bounds x="1733" y="119" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_04ht61k_di" bpmnElement="IntermediateThrowEvent_04ht61k">
+        <dc:Bounds x="1904" y="420" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1878" y="463" width="88" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1tawimx_di" bpmnElement="ColvirCreditHistoryServiceErrorTask">
+        <dc:Bounds x="1733" y="287" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1hn9exl_di" bpmnElement="ExclusiveGateway_1hn9exl" isMarkerVisible="true">
+        <dc:Bounds x="2615" y="134" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2599" y="105" width="86" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0ivqugx_di" bpmnElement="IntermediateThrowEvent_0ivqugx">
+        <dc:Bounds x="3613" y="267" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3596" y="310" width="74" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1qwtbzr_di" bpmnElement="CompleteRequestInfoTask">
+        <dc:Bounds x="3453" y="119" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1w2zp82_di" bpmnElement="TelemarketingNoticeTask">
+        <dc:Bounds x="3273" y="358" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0vjceqd_di" bpmnElement="RequestForCreditBureauReport">
+        <dc:Bounds x="4171" y="119" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0i71080_di" bpmnElement="RequestForCreditBureauReportErrorTask">
+        <dc:Bounds x="4171" y="293" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1lzrvco_di" bpmnElement="ExclusiveGateway_1lzrvco" isMarkerVisible="true">
+        <dc:Bounds x="4639" y="134" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4622" y="105" width="86" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1isquss_di" bpmnElement="RequestForGcvpReport">
+        <dc:Bounds x="5336" y="119" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0wkyw2x_di" bpmnElement="RequestForGcvpReportErrorTask">
+        <dc:Bounds x="5336" y="293" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_19vzihg_di" bpmnElement="IntermediateThrowEvent_19vzihg">
+        <dc:Bounds x="4342" y="315" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4316" y="358" width="88" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0qqcfys_di" bpmnElement="IntermediateThrowEvent_0qqcfys">
+        <dc:Bounds x="5515" y="315" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5489" y="358" width="88" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1wnqqpl_di" bpmnElement="ExclusiveGateway_1wnqqpl" isMarkerVisible="true">
+        <dc:Bounds x="3298" y="134" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0lhi8ng_di" bpmnElement="ExclusiveGateway_0lhi8ng" isMarkerVisible="true">
+        <dc:Bounds x="3130" y="134" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3110" y="98" width="89" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ParallelGateway_0fojpwe_di" bpmnElement="ParallelGateway_0fojpwe">
+        <dc:Bounds x="3130" y="268" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ParallelGateway_1izrjwo_di" bpmnElement="ParallelGateway_1izrjwo">
+        <dc:Bounds x="3298" y="268" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1l4v5gk_di" bpmnElement="EndEvent_1l4v5gk">
+        <dc:Bounds x="3424" y="380" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_06hdrn8_di" bpmnElement="EndEvent_06hdrn8">
+        <dc:Bounds x="3355" y="504" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1ad2yz4_di" bpmnElement="CompleteLoanInfoTask">
+        <dc:Bounds x="233" y="723" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_13s6cwm_di" bpmnElement="CheckColvirCreditHistoryService">
+        <dc:Bounds x="2354" y="119" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1vc4zs9_di" bpmnElement="CheckCreditBureauStopFactors">
+        <dc:Bounds x="4399" y="119" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0zcu9ax_di" bpmnElement="IntermediateThrowEvent_0zcu9ax">
+        <dc:Bounds x="409" y="879" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="391" y="922" width="74" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1imo2xi_di" bpmnElement="IntermediateThrowEvent_1imo2xi">
+        <dc:Bounds x="298" y="879" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="288" y="920" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0e2hlh3_di" bpmnElement="IntermediateThrowEvent_0e2hlh3">
+        <dc:Bounds x="827" y="227" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="769" y="238" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateCatchEvent_15a66z0_di" bpmnElement="IntermediateCatchEvent_15a66z0">
+        <dc:Bounds x="95" y="1690" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="75" y="1733" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1e69yg1_di" bpmnElement="EndEvent_1e69yg1">
+        <dc:Bounds x="506" y="1690" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1aoto60_di" bpmnElement="ServiceTask_1aoto60">
+        <dc:Bounds x="183" y="1668" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1s4rg66_di" bpmnElement="CalculateScore">
+        <dc:Bounds x="480" y="723" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1na9h6t_di" bpmnElement="DeclineNoticeTask">
+        <dc:Bounds x="333" y="1668" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1mks98r_di" bpmnElement="EndEvent_1mks98r">
+        <dc:Bounds x="415" y="1810" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_0fgkfv2_di" bpmnElement="BoundaryEvent_0fgkfv2">
+        <dc:Bounds x="315" y="181" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_1d7yvj5_di" bpmnElement="BoundaryEvent_1d7yvj5">
+        <dc:Bounds x="639" y="181" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_0z8t6on_di" bpmnElement="BoundaryEvent_0z8t6on">
+        <dc:Bounds x="1815" y="181" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_01a5u18_di" bpmnElement="BoundaryEvent_01a5u18">
+        <dc:Bounds x="3355" y="420" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_1o6t1z6_di" bpmnElement="BoundaryEvent_1o6t1z6">
+        <dc:Bounds x="4253" y="181" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_1vovvr6_di" bpmnElement="BoundaryEvent_1vovvr6">
+        <dc:Bounds x="5418" y="181" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_0gu68jk_di" bpmnElement="BoundaryEvent_0gu68jk">
+        <dc:Bounds x="415" y="1730" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_18wmcyl_di" bpmnElement="SequenceFlow_18wmcyl">
+        <di:waypoint x="283" y="367" />
+        <di:waypoint x="283" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1pe4w3a_di" bpmnElement="SequenceFlow_1pe4w3a">
+        <di:waypoint x="333" y="217" />
+        <di:waypoint x="333" y="244" />
+        <di:waypoint x="283" y="244" />
+        <di:waypoint x="283" y="287" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ft64l2_di" bpmnElement="SequenceFlow_0ft64l2">
+        <di:waypoint x="233" y="311" />
+        <di:waypoint x="192" y="311" />
+        <di:waypoint x="192" y="182" />
+        <di:waypoint x="233" y="182" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="169" y="244.5" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_137imvb_di" bpmnElement="SequenceFlow_137imvb">
+        <di:waypoint x="133" y="159" />
+        <di:waypoint x="233" y="159" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1y9z2po_di" bpmnElement="SequenceFlow_1y9z2po">
+        <di:waypoint x="333" y="159" />
+        <di:waypoint x="557" y="159" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_00dcazy_di" bpmnElement="SequenceFlow_00dcazy">
+        <di:waypoint x="131" y="1475" />
+        <di:waypoint x="183" y="1475" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0g79eqh_di" bpmnElement="SequenceFlow_0g79eqh">
+        <di:waypoint x="283" y="1475" />
+        <di:waypoint x="365" y="1475" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1to7vsy_di" bpmnElement="SequenceFlow_1to7vsy">
+        <di:waypoint x="131" y="1593" />
+        <di:waypoint x="181" y="1593" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0s1s3at_di" bpmnElement="SequenceFlow_0s1s3at">
+        <di:waypoint x="281" y="1593" />
+        <di:waypoint x="363" y="1593" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ketppg_di" bpmnElement="SequenceFlow_1ketppg">
+        <di:waypoint x="557" y="327" />
+        <di:waypoint x="505" y="327" />
+        <di:waypoint x="505" y="181" />
+        <di:waypoint x="557" y="181" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="482" y="251" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0bnvk1o_di" bpmnElement="SequenceFlow_0bnvk1o">
+        <di:waypoint x="657" y="159" />
+        <di:waypoint x="820" y="159" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_04zti35_di" bpmnElement="SequenceFlow_04zti35">
+        <di:waypoint x="657" y="217" />
+        <di:waypoint x="657" y="252" />
+        <di:waypoint x="607" y="252" />
+        <di:waypoint x="607" y="287" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0j1hve9_di" bpmnElement="SequenceFlow_0j1hve9">
+        <di:waypoint x="607" y="367" />
+        <di:waypoint x="607" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_19lgssg_di" bpmnElement="SequenceFlow_19lgssg">
+        <di:waypoint x="870" y="159" />
+        <di:waypoint x="993" y="159" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="922" y="141" width="20" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1rqgind_di" bpmnElement="SequenceFlow_1rqgind">
+        <di:waypoint x="845" y="184" />
+        <di:waypoint x="845" y="227" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="854" y="202" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0vh328m_di" bpmnElement="SequenceFlow_0vh328m">
+        <di:waypoint x="845" y="263" />
+        <di:waypoint x="845" y="309" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1620d3o_di" bpmnElement="SequenceFlow_1620d3o">
+        <di:waypoint x="1733" y="327" />
+        <di:waypoint x="1684" y="327" />
+        <di:waypoint x="1684" y="177" />
+        <di:waypoint x="1733" y="177" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1661" y="249" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0cx4azc_di" bpmnElement="SequenceFlow_0cx4azc">
+        <di:waypoint x="1833" y="159" />
+        <di:waypoint x="2088" y="159" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1xunew8_di" bpmnElement="SequenceFlow_1xunew8">
+        <di:waypoint x="1783" y="367" />
+        <di:waypoint x="1783" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_15zxafu_di" bpmnElement="SequenceFlow_15zxafu">
+        <di:waypoint x="1833" y="217" />
+        <di:waypoint x="1833" y="252" />
+        <di:waypoint x="1783" y="252" />
+        <di:waypoint x="1783" y="287" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1uegubm_di" bpmnElement="SequenceFlow_1uegubm">
+        <di:waypoint x="2454" y="159" />
+        <di:waypoint x="2615" y="159" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1qw4dur_di" bpmnElement="SequenceFlow_1qw4dur">
+        <di:waypoint x="2665" y="159" />
+        <di:waypoint x="2864" y="159" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2759" y="141" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ouoxfn_di" bpmnElement="SequenceFlow_1ouoxfn">
+        <di:waypoint x="2640" y="184" />
+        <di:waypoint x="2640" y="253" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2649" y="216" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ppo7fd_di" bpmnElement="SequenceFlow_1ppo7fd">
+        <di:waypoint x="3542" y="199" />
+        <di:waypoint x="3542" y="267" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3549" y="228" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ixmbf9_di" bpmnElement="SequenceFlow_1ixmbf9">
+        <di:waypoint x="3348" y="159" />
+        <di:waypoint x="3453" y="159" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0wmrmgf_di" bpmnElement="SequenceFlow_0wmrmgf">
+        <di:waypoint x="3553" y="159" />
+        <di:waypoint x="3718" y="159" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3595" y="126" width="70" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0azlnau_di" bpmnElement="SequenceFlow_0azlnau">
+        <di:waypoint x="3155" y="318" />
+        <di:waypoint x="3155" y="398" />
+        <di:waypoint x="3273" y="398" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1qy53ia_di" bpmnElement="SequenceFlow_1qy53ia">
+        <di:waypoint x="3373" y="398" />
+        <di:waypoint x="3424" y="398" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_13dc8yj_di" bpmnElement="SequenceFlow_13dc8yj">
+        <di:waypoint x="4171" y="333" />
+        <di:waypoint x="4137" y="333" />
+        <di:waypoint x="4137" y="176" />
+        <di:waypoint x="4171" y="176" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1f02ex4_di" bpmnElement="SequenceFlow_1f02ex4">
+        <di:waypoint x="4271" y="159" />
+        <di:waypoint x="4399" y="159" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1jzphwl_di" bpmnElement="SequenceFlow_1jzphwl">
+        <di:waypoint x="4271" y="217" />
+        <di:waypoint x="4271" y="255" />
+        <di:waypoint x="4221" y="255" />
+        <di:waypoint x="4221" y="293" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1hep94v_di" bpmnElement="SequenceFlow_1hep94v">
+        <di:waypoint x="4271" y="333" />
+        <di:waypoint x="4342" y="333" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_19yxqms_di" bpmnElement="SequenceFlow_19yxqms">
+        <di:waypoint x="4499" y="159" />
+        <di:waypoint x="4639" y="159" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1fyrmvp_di" bpmnElement="SequenceFlow_1fyrmvp">
+        <di:waypoint x="4689" y="159" />
+        <di:waypoint x="4944" y="159" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4806" y="141" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1j29dda_di" bpmnElement="SequenceFlow_1j29dda">
+        <di:waypoint x="4664" y="184" />
+        <di:waypoint x="4664" y="244" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4673" y="194" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1lcha2q_di" bpmnElement="SequenceFlow_1lcha2q">
+        <di:waypoint x="5336" y="333" />
+        <di:waypoint x="5300" y="333" />
+        <di:waypoint x="5300" y="181" />
+        <di:waypoint x="5334" y="181" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0no6m6i_di" bpmnElement="SequenceFlow_0no6m6i">
+        <di:waypoint x="5436" y="217" />
+        <di:waypoint x="5436" y="255" />
+        <di:waypoint x="5386" y="255" />
+        <di:waypoint x="5386" y="293" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ncw5bw_di" bpmnElement="SequenceFlow_1ncw5bw">
+        <di:waypoint x="5436" y="333" />
+        <di:waypoint x="5515" y="333" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_00m9s4b_di" bpmnElement="SequenceFlow_00m9s4b">
+        <di:waypoint x="3180" y="159" />
+        <di:waypoint x="3298" y="159" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3229" y="141" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_036yimh_di" bpmnElement="SequenceFlow_036yimh">
+        <di:waypoint x="3323" y="268" />
+        <di:waypoint x="3323" y="184" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1qji8ud_di" bpmnElement="SequenceFlow_1qji8ud">
+        <di:waypoint x="3155" y="184" />
+        <di:waypoint x="3155" y="268" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3164" y="223" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0jmuejm_di" bpmnElement="SequenceFlow_0jmuejm">
+        <di:waypoint x="3180" y="293" />
+        <di:waypoint x="3298" y="293" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0fdbh8j_di" bpmnElement="SequenceFlow_0fdbh8j">
+        <di:waypoint x="3373" y="456" />
+        <di:waypoint x="3373" y="504" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1a1f8l4_di" bpmnElement="SequenceFlow_1a1f8l4">
+        <di:waypoint x="333" y="763" />
+        <di:waypoint x="480" y="763" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="379" y="745" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_10ux5cn_di" bpmnElement="SequenceFlow_10ux5cn">
+        <di:waypoint x="316" y="803" />
+        <di:waypoint x="316" y="879" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ke84ft_di" bpmnElement="SequenceFlow_0ke84ft">
+        <di:waypoint x="334" y="897" />
+        <di:waypoint x="409" y="897" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1j5gmqe_di" bpmnElement="SequenceFlow_1j5gmqe">
+        <di:waypoint x="580" y="763" />
+        <di:waypoint x="698" y="763" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0t2cfy8_di" bpmnElement="SequenceFlow_0t2cfy8">
+        <di:waypoint x="131" y="1708" />
+        <di:waypoint x="183" y="1708" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ki3nic_di" bpmnElement="SequenceFlow_0ki3nic">
+        <di:waypoint x="433" y="1708" />
+        <di:waypoint x="506" y="1708" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_14nn4yc_di" bpmnElement="SequenceFlow_14nn4yc">
+        <di:waypoint x="283" y="1708" />
+        <di:waypoint x="333" y="1708" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0bzj4ff_di" bpmnElement="SequenceFlow_0bzj4ff">
+        <di:waypoint x="433" y="1766" />
+        <di:waypoint x="433" y="1810" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_022rhwf_di" bpmnElement="SequenceFlow_022rhwf">
+        <di:waypoint x="1278" y="159" />
+        <di:waypoint x="1387" y="159" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_151l8v0_di" bpmnElement="IntermediateThrowEvent_151l8v0">
+        <dc:Bounds x="265" y="420" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="258" y="463" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0baxgwu_di" bpmnElement="SequenceFlow_0baxgwu">
+        <di:waypoint x="301" y="438" />
+        <di:waypoint x="394" y="438" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0o5hqpw_di" bpmnElement="IntermediateThrowEvent_0o5hqpw">
+        <dc:Bounds x="589" y="420" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="583" y="463" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ll7nvv_di" bpmnElement="SequenceFlow_1ll7nvv">
+        <di:waypoint x="625" y="438" />
+        <di:waypoint x="726" y="438" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_09ga1p6_di" bpmnElement="IntermediateThrowEvent_09ga1p6">
+        <dc:Bounds x="1347" y="420" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1322" y="463" width="88" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1pb2jcm_di" bpmnElement="OfflineGcvpService">
+        <dc:Bounds x="1178" y="119" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1dno7yc_di" bpmnElement="OfflineGcvpServiceErrorTask">
+        <dc:Bounds x="1178" y="287" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0mxrw2b_di" bpmnElement="IntermediateThrowEvent_0mxrw2b">
+        <dc:Bounds x="1210" y="420" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1204" y="463" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_1gw9bsi_di" bpmnElement="BoundaryEvent_1gw9bsi">
+        <dc:Bounds x="1260" y="181" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0fw4vgi_di" bpmnElement="SequenceFlow_0fw4vgi">
+        <di:waypoint x="1246" y="438" />
+        <di:waypoint x="1347" y="438" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0dlhcte_di" bpmnElement="SequenceFlow_0dlhcte">
+        <di:waypoint x="1278" y="217" />
+        <di:waypoint x="1278" y="252" />
+        <di:waypoint x="1228" y="252" />
+        <di:waypoint x="1228" y="287" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_08o877d_di" bpmnElement="SequenceFlow_08o877d">
+        <di:waypoint x="1178" y="327" />
+        <di:waypoint x="1126" y="327" />
+        <di:waypoint x="1126" y="181" />
+        <di:waypoint x="1178" y="181" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1103" y="251" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1f0jubh_di" bpmnElement="SequenceFlow_1f0jubh">
+        <di:waypoint x="1228" y="367" />
+        <di:waypoint x="1228" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1h8k621_di" bpmnElement="IntermediateThrowEvent_1h8k621">
+        <dc:Bounds x="1765" y="420" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1758" y="463" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_15ut4lx_di" bpmnElement="SequenceFlow_15ut4lx">
+        <di:waypoint x="1801" y="438" />
+        <di:waypoint x="1904" y="438" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_001yqm9_di" bpmnElement="FailedScreeningDecisionTask">
+        <dc:Bounds x="2590" y="253" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1m45i43_di" bpmnElement="SequenceFlow_1m45i43">
+        <di:waypoint x="2668" y="333" />
+        <di:waypoint x="2668" y="406" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2675" y="367" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_11si5pa_di" bpmnElement="EndEvent_0eaad2k">
+        <dc:Bounds x="2650" y="406" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2641" y="449" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_18kny8r_di" bpmnElement="SequenceFlow_18kny8r">
+        <di:waypoint x="2686" y="424" />
+        <di:waypoint x="2742" y="424" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0zbv7fh_di" bpmnElement="IntermediateThrowEvent_0f99064">
+        <dc:Bounds x="2742" y="406" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2723" y="449" width="74" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0gilih6_di" bpmnElement="ExclusiveGateway_0gilih6" isMarkerVisible="true">
+        <dc:Bounds x="2864" y="134" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_172r1p5_di" bpmnElement="SequenceFlow_172r1p5">
+        <di:waypoint x="2914" y="159" />
+        <di:waypoint x="3130" y="159" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1u62hqt_di" bpmnElement="SequenceFlow_1u62hqt">
+        <di:waypoint x="2690" y="293" />
+        <di:waypoint x="2839" y="293" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2727" y="262" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_0jzq8x7_di" bpmnElement="AuthorizedBodyTask">
+        <dc:Bounds x="2839" y="253" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ftvcuz_di" bpmnElement="SequenceFlow_0ftvcuz">
+        <di:waypoint x="2889" y="253" />
+        <di:waypoint x="2889" y="184" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2899" y="216" width="65" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1rqtp2s_di" bpmnElement="IntermediateThrowEvent_1rqtp2s">
+        <dc:Bounds x="2871" y="406" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2862" y="449" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0fk6628_di" bpmnElement="SequenceFlow_0fk6628">
+        <di:waypoint x="2889" y="333" />
+        <di:waypoint x="2889" y="406" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2877" y="367" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ogo2wz_di" bpmnElement="SequenceFlow_1ogo2wz">
+        <di:waypoint x="2907" y="424" />
+        <di:waypoint x="2987" y="424" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0d8gt7o_di" bpmnElement="IntermediateThrowEvent_068ddkd">
+        <dc:Bounds x="2987" y="406" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2963" y="449" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0jy3clv_di" bpmnElement="IntermediateThrowEvent_0jy3clv">
+        <dc:Bounds x="3524" y="267" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0v49y0q_di" bpmnElement="SequenceFlow_0v49y0q">
+        <di:waypoint x="3560" y="285" />
+        <di:waypoint x="3613" y="285" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_03rfw39_di" bpmnElement="ExclusiveGateway_03rfw39" isMarkerVisible="true">
+        <dc:Bounds x="4639" y="244" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4540" y="255" width="89" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1u91l72_di" bpmnElement="ExclusiveGateway_1u91l72" isMarkerVisible="true">
+        <dc:Bounds x="4944" y="134" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0gec70a_di" bpmnElement="SequenceFlow_0gec70a">
+        <di:waypoint x="4689" y="269" />
+        <di:waypoint x="4944" y="269" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4823" y="251" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1vo2ke5_di" bpmnElement="FailedScreeningDecisionTask2">
+        <dc:Bounds x="4614" y="366" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_10rtdzt_di" bpmnElement="IntermediateThrowEvent_10rtdzt">
+        <dc:Bounds x="4683" y="519" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4674" y="562" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1q0mtcn_di" bpmnElement="IntermediateThrowEvent_1q0mtcn">
+        <dc:Bounds x="4788" y="519" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4769" y="562" width="74" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0y71wh1_di" bpmnElement="ExclusiveGateway_0y71wh1" isMarkerVisible="true">
+        <dc:Bounds x="4944" y="244" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0bwtm0z_di" bpmnElement="AuthorizedBodyTask2">
+        <dc:Bounds x="4919" y="366" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0ne1l8p_di" bpmnElement="IntermediateThrowEvent_0ne1l8p">
+        <dc:Bounds x="4951" y="519" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4942" y="562" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0wusyde_di" bpmnElement="IntermediateThrowEvent_0wusyde">
+        <dc:Bounds x="5067" y="519" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5043" y="562" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_01gfrjh_di" bpmnElement="SequenceFlow_01gfrjh">
+        <di:waypoint x="4701" y="446" />
+        <di:waypoint x="4701" y="519" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4708" y="480" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1cbhdbl_di" bpmnElement="SequenceFlow_1cbhdbl">
+        <di:waypoint x="4714" y="406" />
+        <di:waypoint x="4919" y="406" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4777" y="372" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0bf7yvt_di" bpmnElement="SequenceFlow_0bf7yvt">
+        <di:waypoint x="4719" y="537" />
+        <di:waypoint x="4788" y="537" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ixa4pa_di" bpmnElement="SequenceFlow_1ixa4pa">
+        <di:waypoint x="4969" y="366" />
+        <di:waypoint x="4969" y="294" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4979" y="325" width="65" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0wknxng_di" bpmnElement="SequenceFlow_0wknxng">
+        <di:waypoint x="4969" y="446" />
+        <di:waypoint x="4969" y="519" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4957" y="481" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1fccugf_di" bpmnElement="SequenceFlow_1fccugf">
+        <di:waypoint x="4987" y="537" />
+        <di:waypoint x="5067" y="537" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_159bqmg_di" bpmnElement="SequenceFlow_159bqmg">
+        <di:waypoint x="4664" y="294" />
+        <di:waypoint x="4664" y="366" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4675" y="318" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0pmkvfm_di" bpmnElement="SequenceFlow_0pmkvfm">
+        <di:waypoint x="4969" y="244" />
+        <di:waypoint x="4969" y="184" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_13i1niw_di" bpmnElement="SequenceFlow_13i1niw">
+        <di:waypoint x="4994" y="159" />
+        <di:waypoint x="5143" y="159" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0tug8p4_di" bpmnElement="ExclusiveGateway_0tug8p4" isMarkerVisible="true">
+        <dc:Bounds x="5143" y="134" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5130" y="191" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0piv9ey_di" bpmnElement="SequenceFlow_0piv9ey">
+        <di:waypoint x="5193" y="159" />
+        <di:waypoint x="5336" y="159" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5255" y="141" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1dlim9f_di" bpmnElement="ExclusiveGateway_1dlim9f" isMarkerVisible="true">
+        <dc:Bounds x="5750" y="134" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1of8tmo_di" bpmnElement="SequenceFlow_1of8tmo">
+        <di:waypoint x="5800" y="159" />
+        <di:waypoint x="5889" y="159" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1vgpx14_di" bpmnElement="SequenceFlow_1vgpx14">
+        <di:waypoint x="5168" y="134" />
+        <di:waypoint x="5168" y="64" />
+        <di:waypoint x="5775" y="64" />
+        <di:waypoint x="5775" y="134" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5178" y="91" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_1i53c45_di" bpmnElement="CalculateBasicScore">
+        <dc:Bounds x="3718" y="119" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0ipz7tr_di" bpmnElement="ExclusiveGateway_0ipz7tr" isMarkerVisible="true">
+        <dc:Bounds x="3933" y="134" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3925" y="89" width="66" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1laislf_di" bpmnElement="SequenceFlow_1laislf">
+        <di:waypoint x="3818" y="159" />
+        <di:waypoint x="3933" y="159" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1j91983_di" bpmnElement="SequenceFlow_1j91983">
+        <di:waypoint x="3983" y="159" />
+        <di:waypoint x="4171" y="159" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4037" y="141" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0zyd6jy_di" bpmnElement="IntermediateThrowEvent_0zyd6jy">
+        <dc:Bounds x="3940" y="267" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3934" y="310" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_19lxiqo_di" bpmnElement="SequenceFlow_19lxiqo">
+        <di:waypoint x="3958" y="184" />
+        <di:waypoint x="3958" y="267" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3963" y="222" width="43" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1jm8eh1_di" bpmnElement="SequenceFlow_1jm8eh1">
+        <di:waypoint x="3976" y="285" />
+        <di:waypoint x="4041" y="285" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1bz5tev_di" bpmnElement="IntermediateThrowEvent_0ilwhnr">
+        <dc:Bounds x="4041" y="267" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4017" y="310" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1ru7csh_di" bpmnElement="ExclusiveGateway_1ru7csh" isMarkerVisible="true">
+        <dc:Bounds x="698" y="738" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="697" y="707" width="51" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_03k84j1_di" bpmnElement="SequenceFlow_03k84j1">
+        <di:waypoint x="748" y="763" />
+        <di:waypoint x="935" y="763" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="801" y="744" width="82" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_10dzk0c_di" bpmnElement="IntermediateThrowEvent_10dzk0c">
+        <dc:Bounds x="705" y="879" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="696" y="922" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ret7x9_di" bpmnElement="SequenceFlow_1ret7x9">
+        <di:waypoint x="723" y="788" />
+        <di:waypoint x="723" y="879" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="729" y="830" width="43" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0yx9knm_di" bpmnElement="SequenceFlow_0yx9knm">
+        <di:waypoint x="741" y="897" />
+        <di:waypoint x="818" y="897" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0vw2y0j_di" bpmnElement="IntermediateThrowEvent_1j9dztj">
+        <dc:Bounds x="818" y="879" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="794" y="922" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0ogpowx_di" bpmnElement="VerifierTask">
+        <dc:Bounds x="1128" y="723" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1lpbye0_di" bpmnElement="IntermediateThrowEvent_1lpbye0">
+        <dc:Bounds x="1160" y="862" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1151" y="905" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0mxlj7j_di" bpmnElement="SequenceFlow_0mxlj7j">
+        <di:waypoint x="1178" y="803" />
+        <di:waypoint x="1178" y="862" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0hy1sre_di" bpmnElement="SequenceFlow_0hy1sre">
+        <di:waypoint x="1196" y="880" />
+        <di:waypoint x="1280" y="880" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0jok05o_di" bpmnElement="IntermediateThrowEvent_0k2dwl5">
+        <dc:Bounds x="1280" y="862" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1256" y="905" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0skafyz_di" bpmnElement="SequenceFlow_0skafyz">
+        <di:waypoint x="1178" y="723" />
+        <di:waypoint x="1178" y="652" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1181" y="675" width="71" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_099buww_di" bpmnElement="SequenceFlow_099buww">
+        <di:waypoint x="5436" y="159" />
+        <di:waypoint x="5589" y="159" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_194omd2_di" bpmnElement="IntermediateThrowEvent_194omd2">
+        <dc:Bounds x="5889" y="141" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5884" y="184" width="51" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0gcpc35_di" bpmnElement="SequenceFlow_0gcpc35">
+        <di:waypoint x="5925" y="159" />
+        <di:waypoint x="6016" y="159" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0mibdz6_di" bpmnElement="IntermediateThrowEvent_1qrvo6i">
+        <dc:Bounds x="6016" y="141" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5997" y="184" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateCatchEvent_125sqg5_di" bpmnElement="IntermediateThrowEvent_1tupnpi">
+        <dc:Bounds x="97" y="745" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="77" y="788" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_05twzq7_di" bpmnElement="SequenceFlow_05twzq7">
+        <di:waypoint x="133" y="763" />
+        <di:waypoint x="233" y="763" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_13ab60o_di" bpmnElement="ExclusiveGateway_13ab60o" isMarkerVisible="true">
+        <dc:Bounds x="1539" y="738" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1530" y="701" width="67" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0qos6x3_di" bpmnElement="SequenceFlow_0qos6x3">
+        <di:waypoint x="1228" y="763" />
+        <di:waypoint x="1387" y="763" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1277" y="743" width="65" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_02som6j_di" bpmnElement="ExclusiveGateway_02som6j" isMarkerVisible="true">
+        <dc:Bounds x="1682" y="738" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1668" y="688" width="77" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0z4cwu6_di" bpmnElement="SequenceFlow_0z4cwu6">
+        <di:waypoint x="1589" y="763" />
+        <di:waypoint x="1682" y="763" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1626" y="745" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1nyii63_di" bpmnElement="ExclusiveGateway_1nyii63" isMarkerVisible="true">
+        <dc:Bounds x="1825" y="738" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1824" y="798" width="51" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1acvztg_di" bpmnElement="SequenceFlow_1acvztg">
+        <di:waypoint x="1732" y="763" />
+        <di:waypoint x="1825" y="763" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1769" y="745" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1oleo4v_di" bpmnElement="SequenceFlow_1oleo4v">
+        <di:waypoint x="1875" y="763" />
+        <di:waypoint x="1986" y="763" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1916" y="745" width="33" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1eyx6ee_di" bpmnElement="ExclusiveGateway_1eyx6ee" isMarkerVisible="true">
+        <dc:Bounds x="935" y="738" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="916" y="688" width="88" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_08enlfw_di" bpmnElement="SequenceFlow_08enlfw">
+        <di:waypoint x="985" y="763" />
+        <di:waypoint x="1128" y="763" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1047" y="745" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1l43sl8_di" bpmnElement="ExclusiveGateway_1l43sl8" isMarkerVisible="true">
+        <dc:Bounds x="1387" y="738" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1wa4axs_di" bpmnElement="SequenceFlow_1wa4axs">
+        <di:waypoint x="1437" y="763" />
+        <di:waypoint x="1539" y="763" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0aldxh6_di" bpmnElement="SequenceFlow_0aldxh6">
+        <di:waypoint x="960" y="788" />
+        <di:waypoint x="960" y="966" />
+        <di:waypoint x="1412" y="966" />
+        <di:waypoint x="1412" y="788" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="971" y="837" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1xoj1nu_di" bpmnElement="ExclusiveGateway_1xoj1nu" isMarkerVisible="true">
+        <dc:Bounds x="2113" y="738" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0n2nn20_di" bpmnElement="SequenceFlow_0n2nn20">
+        <di:waypoint x="2163" y="763" />
+        <di:waypoint x="2251" y="763" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1s7r20h_di" bpmnElement="SequenceFlow_1s7r20h">
+        <di:waypoint x="1564" y="788" />
+        <di:waypoint x="1564" y="893" />
+        <di:waypoint x="2138" y="893" />
+        <di:waypoint x="2138" y="788" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1572" y="811" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1nqjv0q_di" bpmnElement="ExclusiveGateway_1nqjv0q" isMarkerVisible="true">
+        <dc:Bounds x="1986" y="738" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0cwyksi_di" bpmnElement="SequenceFlow_0cwyksi">
+        <di:waypoint x="2036" y="763" />
+        <di:waypoint x="2113" y="763" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1wtb6t2_di" bpmnElement="SequenceFlow_1wtb6t2">
+        <di:waypoint x="1707" y="788" />
+        <di:waypoint x="1707" y="861" />
+        <di:waypoint x="2011" y="861" />
+        <di:waypoint x="2011" y="788" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1714" y="805" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1tdwhxb_di" bpmnElement="UnderwriterTask">
+        <dc:Bounds x="2251" y="723" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1kxuc3b_di" bpmnElement="SequenceFlow_1kxuc3b">
+        <di:waypoint x="2351" y="763" />
+        <di:waypoint x="2529" y="763" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2407" y="734" width="70" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_08ezid5_di" bpmnElement="SequenceFlow_08ezid5">
+        <di:waypoint x="1850" y="738" />
+        <di:waypoint x="1850" y="660" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1856" y="694" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_0brtnbh_di" bpmnElement="SecurityTask">
+        <dc:Bounds x="2529" y="723" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1pk591g_di" bpmnElement="IntermediateThrowEvent_1pk591g">
+        <dc:Bounds x="1832" y="624" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1808" y="600" width="84" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1bq6i5k_di" bpmnElement="SequenceFlow_1bq6i5k">
+        <di:waypoint x="1868" y="642" />
+        <di:waypoint x="1955" y="642" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0pwg2ec_di" bpmnElement="IntermediateThrowEvent_0xmx9wk">
+        <dc:Bounds x="1955" y="624" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1941" y="667" width="66" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0968do0_di" bpmnElement="IntermediateThrowEvent_0968do0">
+        <dc:Bounds x="2342" y="875" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2385" y="886" width="71" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1k76dxo_di" bpmnElement="IntermediateThrowEvent_1k76dxo">
+        <dc:Bounds x="2342" y="939" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2321" y="982" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_077eoit_di" bpmnElement="IntermediateThrowEvent_077eoit">
+        <dc:Bounds x="2561" y="624" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2543" y="600" width="71" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0l1nr8e_di" bpmnElement="IntermediateThrowEvent_0l1nr8e">
+        <dc:Bounds x="2674" y="624" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2653" y="667" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_14oh91h_di" bpmnElement="SequenceFlow_14oh91h">
+        <di:waypoint x="2597" y="642" />
+        <di:waypoint x="2674" y="642" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1xt68q3_di" bpmnElement="SequenceFlow_1xt68q3">
+        <di:waypoint x="2304" y="803" />
+        <di:waypoint x="2360" y="839" />
+        <di:waypoint x="2360" y="875" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0i15w5k_di" bpmnElement="IntermediateThrowEvent_0i15w5k">
+        <dc:Bounds x="2227" y="875" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2162" y="886" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1eorbjg_di" bpmnElement="IntermediateThrowEvent_1eorbjg">
+        <dc:Bounds x="2227" y="939" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2203" y="982" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0n4xghc_di" bpmnElement="SequenceFlow_0n4xghc">
+        <di:waypoint x="2245" y="911" />
+        <di:waypoint x="2245" y="939" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1wchs11_di" bpmnElement="SequenceFlow_1wchs11">
+        <di:waypoint x="2579" y="723" />
+        <di:waypoint x="2579" y="660" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1bzomeq_di" bpmnElement="SequenceFlow_1bzomeq">
+        <di:waypoint x="2301" y="803" />
+        <di:waypoint x="2245" y="839" />
+        <di:waypoint x="2245" y="875" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0xu2ocs_di" bpmnElement="SequenceFlow_0xu2ocs">
+        <di:waypoint x="2360" y="911" />
+        <di:waypoint x="2360" y="939" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_095h6ou_di" bpmnElement="IntermediateThrowEvent_095h6ou">
+        <dc:Bounds x="2283" y="624" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2269" y="594" width="67" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0fydu9v_di" bpmnElement="SequenceFlow_0fydu9v">
+        <di:waypoint x="2301" y="723" />
+        <di:waypoint x="2301" y="660" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_05kcuyf_di" bpmnElement="SequenceFlow_05kcuyf">
+        <di:waypoint x="2319" y="642" />
+        <di:waypoint x="2398" y="642" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1o9brq0_di" bpmnElement="IntermediateThrowEvent_1hwmzjs">
+        <dc:Bounds x="2398" y="624" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2383" y="667" width="66" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_07dwb6n_di" bpmnElement="IntermediateThrowEvent_07dwb6n">
+        <dc:Bounds x="2561" y="862" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2552" y="905" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_06k5gah_di" bpmnElement="SequenceFlow_06k5gah">
+        <di:waypoint x="2579" y="803" />
+        <di:waypoint x="2579" y="862" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2689" y="865" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_12fyt6g_di" bpmnElement="SequenceFlow_12fyt6g">
+        <di:waypoint x="2597" y="880" />
+        <di:waypoint x="2674" y="880" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0zxcgfp_di" bpmnElement="IntermediateThrowEvent_0fhbthj">
+        <dc:Bounds x="2674" y="862" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2650" y="905" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0le704m_di" bpmnElement="IntermediateThrowEvent_0le704m">
+        <dc:Bounds x="2722" y="745" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2708" y="788" width="65" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_11azzki_di" bpmnElement="SequenceFlow_11azzki">
+        <di:waypoint x="2629" y="763" />
+        <di:waypoint x="2722" y="763" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_12rkgnz_di" bpmnElement="SequenceFlow_12rkgnz">
+        <di:waypoint x="2758" y="763" />
+        <di:waypoint x="2851" y="763" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1esw55p_di" bpmnElement="IntermediateThrowEvent_1an1zxo">
+        <dc:Bounds x="2851" y="745" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2836" y="788" width="66" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateCatchEvent_0k88gdl_di" bpmnElement="IntermediateThrowEvent_0cf1zue">
+        <dc:Bounds x="97" y="1130" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="83" y="1173" width="66" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0sje8vm_di" bpmnElement="StandardInternalScreeningService2">
+        <dc:Bounds x="710" y="1108" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1ovj9lc_di" bpmnElement="StandardInternalScreeningServiceErrorTask2">
+        <dc:Bounds x="710" y="1276" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1dwfypq_di" bpmnElement="IntermediateThrowEvent_1dwfypq">
+        <dc:Bounds x="839" y="1409" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="814" y="1452" width="88" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1tje81x_di" bpmnElement="IntermediateThrowEvent_1tje81x">
+        <dc:Bounds x="742" y="1409" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="736" y="1452" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_1w17zz8_di" bpmnElement="BoundaryEvent_1w17zz8">
+        <dc:Bounds x="792" y="1170" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0yd0w60_di" bpmnElement="SequenceFlow_0yd0w60">
+        <di:waypoint x="710" y="1316" />
+        <di:waypoint x="658" y="1316" />
+        <di:waypoint x="658" y="1170" />
+        <di:waypoint x="710" y="1170" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="635" y="1240" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0um9at4_di" bpmnElement="SequenceFlow_0um9at4">
+        <di:waypoint x="810" y="1206" />
+        <di:waypoint x="810" y="1241" />
+        <di:waypoint x="760" y="1241" />
+        <di:waypoint x="760" y="1276" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0cywgwk_di" bpmnElement="SequenceFlow_0cywgwk">
+        <di:waypoint x="760" y="1356" />
+        <di:waypoint x="760" y="1409" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1o81jrt_di" bpmnElement="SequenceFlow_1o81jrt">
+        <di:waypoint x="778" y="1427" />
+        <di:waypoint x="839" y="1427" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1y08mkr_di" bpmnElement="SequenceFlow_1y08mkr">
+        <di:waypoint x="133" y="1148" />
+        <di:waypoint x="218" y="1148" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1on1xqh_di" bpmnElement="ExclusiveGateway_1on1xqh" isMarkerVisible="true">
+        <dc:Bounds x="924" y="1123" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="915" y="1088" width="68" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0tdp192_di" bpmnElement="IntermediateThrowEvent_0tdp192">
+        <dc:Bounds x="931" y="1352" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="908" y="1395" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1rcl052_di" bpmnElement="IntermediateThrowEvent_1rcl052">
+        <dc:Bounds x="931" y="1256" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="874" y="1267" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_096009t_di" bpmnElement="IntermediateThrowEvent_096009t">
+        <dc:Bounds x="1259" y="1409" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1234" y="1452" width="88" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1w2aqfr_di" bpmnElement="CreateCustomerCard">
+        <dc:Bounds x="1124" y="1108" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0hjpm8m_di" bpmnElement="CreateCustomerCardErrorTask">
+        <dc:Bounds x="1124" y="1276" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1yuixfh_di" bpmnElement="IntermediateThrowEvent_1yuixfh">
+        <dc:Bounds x="1156" y="1409" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1150" y="1452" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_0qwvtws_di" bpmnElement="BoundaryEvent_0qwvtws">
+        <dc:Bounds x="1206" y="1170" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1sqntnw_di" bpmnElement="SequenceFlow_1sqntnw">
+        <di:waypoint x="974" y="1148" />
+        <di:waypoint x="1124" y="1148" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1021" y="1128" width="20" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1r1d4g2_di" bpmnElement="SequenceFlow_1r1d4g2">
+        <di:waypoint x="949" y="1173" />
+        <di:waypoint x="949" y="1256" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="953" y="1200" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_17m0b3z_di" bpmnElement="SequenceFlow_17m0b3z">
+        <di:waypoint x="949" y="1292" />
+        <di:waypoint x="949" y="1352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0bisryd_di" bpmnElement="SequenceFlow_0bisryd">
+        <di:waypoint x="1192" y="1427" />
+        <di:waypoint x="1259" y="1427" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1euo3pt_di" bpmnElement="SequenceFlow_1euo3pt">
+        <di:waypoint x="1124" y="1316" />
+        <di:waypoint x="1072" y="1316" />
+        <di:waypoint x="1072" y="1170" />
+        <di:waypoint x="1124" y="1170" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1049" y="1240" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_03pcxq9_di" bpmnElement="SequenceFlow_03pcxq9">
+        <di:waypoint x="1224" y="1206" />
+        <di:waypoint x="1224" y="1241" />
+        <di:waypoint x="1174" y="1241" />
+        <di:waypoint x="1174" y="1276" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_16moie8_di" bpmnElement="SequenceFlow_16moie8">
+        <di:waypoint x="1174" y="1356" />
+        <di:waypoint x="1174" y="1409" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_02dab2s_di" bpmnElement="SequenceFlow_02dab2s">
+        <di:waypoint x="810" y="1148" />
+        <di:waypoint x="924" y="1148" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1o7zkwb_di" bpmnElement="IntermediateThrowEvent_1o7zkwb">
+        <dc:Bounds x="1534" y="1409" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1509" y="1452" width="88" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_019g88w_di" bpmnElement="IntermediateThrowEvent_019g88w">
+        <dc:Bounds x="1417" y="1409" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1411" y="1452" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1qhsy6o_di" bpmnElement="CreateCurrentAccount">
+        <dc:Bounds x="1385" y="1108" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1x7ek4s_di" bpmnElement="CreateCurrentAccountErrorTask">
+        <dc:Bounds x="1385" y="1276" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_1m7x6ms_di" bpmnElement="BoundaryEvent_1m7x6ms">
+        <dc:Bounds x="1467" y="1170" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_01pg8hu_di" bpmnElement="SequenceFlow_01pg8hu">
+        <di:waypoint x="1453" y="1427" />
+        <di:waypoint x="1534" y="1427" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_03qt43r_di" bpmnElement="SequenceFlow_03qt43r">
+        <di:waypoint x="1435" y="1356" />
+        <di:waypoint x="1435" y="1409" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_11ybsb3_di" bpmnElement="SequenceFlow_11ybsb3">
+        <di:waypoint x="1485" y="1206" />
+        <di:waypoint x="1485" y="1241" />
+        <di:waypoint x="1435" y="1241" />
+        <di:waypoint x="1435" y="1276" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1enhc4l_di" bpmnElement="SequenceFlow_1enhc4l">
+        <di:waypoint x="1385" y="1316" />
+        <di:waypoint x="1333" y="1316" />
+        <di:waypoint x="1333" y="1170" />
+        <di:waypoint x="1385" y="1170" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1310" y="1240" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0usdjz6_di" bpmnElement="IntermediateThrowEvent_0usdjz6">
+        <dc:Bounds x="1816" y="1409" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1791" y="1452" width="88" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0mvgnlo_di" bpmnElement="IntermediateThrowEvent_0mvgnlo">
+        <dc:Bounds x="1702" y="1409" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1696" y="1452" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0sop6qr_di" bpmnElement="RegisterLoan">
+        <dc:Bounds x="1670" y="1108" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1ac6b9x_di" bpmnElement="RegisterLoanErrorTask">
+        <dc:Bounds x="1670" y="1276" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_0sgsqes_di" bpmnElement="BoundaryEvent_0sgsqes">
+        <dc:Bounds x="1752" y="1170" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1jytj9h_di" bpmnElement="SequenceFlow_1jytj9h">
+        <di:waypoint x="1738" y="1427" />
+        <di:waypoint x="1816" y="1427" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0rtblen_di" bpmnElement="SequenceFlow_0rtblen">
+        <di:waypoint x="1720" y="1356" />
+        <di:waypoint x="1720" y="1409" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0u1gss4_di" bpmnElement="SequenceFlow_0u1gss4">
+        <di:waypoint x="1770" y="1206" />
+        <di:waypoint x="1770" y="1241" />
+        <di:waypoint x="1720" y="1241" />
+        <di:waypoint x="1720" y="1276" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0w1gfno_di" bpmnElement="SequenceFlow_0w1gfno">
+        <di:waypoint x="1670" y="1316" />
+        <di:waypoint x="1618" y="1316" />
+        <di:waypoint x="1618" y="1170" />
+        <di:waypoint x="1670" y="1170" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1595" y="1240" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0gvlrr4_di" bpmnElement="SequenceFlow_0gvlrr4">
+        <di:waypoint x="1224" y="1148" />
+        <di:waypoint x="1385" y="1148" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1s33uf0_di" bpmnElement="SequenceFlow_1s33uf0">
+        <di:waypoint x="1485" y="1148" />
+        <di:waypoint x="1670" y="1148" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1mdna7q_di" bpmnElement="SequenceFlow_1mdna7q">
+        <di:waypoint x="1770" y="1148" />
+        <di:waypoint x="1961" y="1148" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1nvhng1_di" bpmnElement="SignAgreementTask">
+        <dc:Bounds x="2279" y="1108" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_08hnr0c_di" bpmnElement="ActualizeLoan">
+        <dc:Bounds x="2641" y="1108" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0u21kuq_di" bpmnElement="ActualizeLoanErrorTask">
+        <dc:Bounds x="2641" y="1276" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_0y7eb1m_di" bpmnElement="BoundaryEvent_0y7eb1m">
+        <dc:Bounds x="2723" y="1170" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0knq1dh_di" bpmnElement="SequenceFlow_0knq1dh">
+        <di:waypoint x="2741" y="1206" />
+        <di:waypoint x="2741" y="1241" />
+        <di:waypoint x="2691" y="1241" />
+        <di:waypoint x="2691" y="1276" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0049zo4_di" bpmnElement="SequenceFlow_0049zo4">
+        <di:waypoint x="2641" y="1316" />
+        <di:waypoint x="2589" y="1316" />
+        <di:waypoint x="2589" y="1170" />
+        <di:waypoint x="2641" y="1170" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2566" y="1240" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_148qnu2_di" bpmnElement="SequenceFlow_148qnu2">
+        <di:waypoint x="2379" y="1148" />
+        <di:waypoint x="2641" y="1148" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2488" y="1132" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_1nze318_di" bpmnElement="DeleteLoan">
+        <dc:Bounds x="2279" y="1276" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_08h8rgw_di" bpmnElement="DeleteLoanErrorTask">
+        <dc:Bounds x="2250" y="1444" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_1hjuinu_di" bpmnElement="BoundaryEvent_1hjuinu">
+        <dc:Bounds x="2361" y="1338" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1xnvax1_di" bpmnElement="SequenceFlow_1xnvax1">
+        <di:waypoint x="2250" y="1484" />
+        <di:waypoint x="2198" y="1484" />
+        <di:waypoint x="2198" y="1338" />
+        <di:waypoint x="2279" y="1338" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1701" y="1437" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0wshb62_di" bpmnElement="SequenceFlow_0wshb62">
+        <di:waypoint x="2379" y="1374" />
+        <di:waypoint x="2379" y="1409" />
+        <di:waypoint x="2300" y="1409" />
+        <di:waypoint x="2300" y="1444" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1pigpuq_di" bpmnElement="SequenceFlow_1pigpuq">
+        <di:waypoint x="2329" y="1188" />
+        <di:waypoint x="2329" y="1276" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2275" y="1227" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1lpchdi_di" bpmnElement="IntermediateThrowEvent_1lpchdi">
+        <dc:Bounds x="2472" y="1298" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2457" y="1274" width="66" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1x2kn7d_di" bpmnElement="SequenceFlow_1x2kn7d">
+        <di:waypoint x="2379" y="1316" />
+        <di:waypoint x="2472" y="1316" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0lw6nyh_di" bpmnElement="SequenceFlow_0lw6nyh">
+        <di:waypoint x="2490" y="1334" />
+        <di:waypoint x="2490" y="1376" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_15c15c3_di" bpmnElement="IntermediateThrowEvent_1s8l118">
+        <dc:Bounds x="2472" y="1376" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2453" y="1419" width="74" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1l6tp56_di" bpmnElement="CreditDossierTask">
+        <dc:Bounds x="2833" y="1108" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1f7b73p_di" bpmnElement="SequenceFlow_1f7b73p">
+        <di:waypoint x="2741" y="1148" />
+        <di:waypoint x="2833" y="1148" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_05ppclo_di" bpmnElement="CheckCreditDossierTask">
+        <dc:Bounds x="3030" y="1108" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_15ec6q0_di" bpmnElement="SequenceFlow_15ec6q0">
+        <di:waypoint x="2933" y="1148" />
+        <di:waypoint x="3030" y="1148" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_012ryan_di" bpmnElement="SequenceFlow_012ryan">
+        <di:waypoint x="3080" y="1188" />
+        <di:waypoint x="3080" y="1246" />
+        <di:waypoint x="2883" y="1246" />
+        <di:waypoint x="2883" y="1188" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2947" y="1228" width="71" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_1llx94n_di" bpmnElement="ApproveRequest">
+        <dc:Bounds x="3243" y="1108" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0w7kim4_di" bpmnElement="SequenceFlow_0w7kim4">
+        <di:waypoint x="3130" y="1148" />
+        <di:waypoint x="3243" y="1148" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3155" y="1130" width="65" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_1mj8z9j_di" bpmnElement="EndEvent_1mj8z9j">
+        <dc:Bounds x="3412" y="1130" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1y8ha07_di" bpmnElement="SequenceFlow_1y8ha07">
+        <di:waypoint x="3343" y="1148" />
+        <di:waypoint x="3412" y="1148" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0bz8ere_di" bpmnElement="ExclusiveGateway_0bz8ere" isMarkerVisible="true">
+        <dc:Bounds x="1153" y="602" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1133" y="559" width="90" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1knuo1f_di" bpmnElement="SequenceFlow_1knuo1f">
+        <di:waypoint x="1153" y="627" />
+        <di:waypoint x="283" y="627" />
+        <di:waypoint x="283" y="723" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="712" y="609" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_04u6imn_di" bpmnElement="IntermediateThrowEvent_04u6imn">
+        <dc:Bounds x="1280" y="609" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1271" y="652" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0e5pppg_di" bpmnElement="SequenceFlow_0e5pppg">
+        <di:waypoint x="1203" y="627" />
+        <di:waypoint x="1280" y="627" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1232" y="609" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1j5o7j5_di" bpmnElement="SequenceFlow_1j5o7j5">
+        <di:waypoint x="1316" y="627" />
+        <di:waypoint x="1393" y="627" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0zlyemh_di" bpmnElement="IntermediateThrowEvent_1p39ro0">
+        <dc:Bounds x="1393" y="609" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1369" y="652" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_0db58bw_di" bpmnElement="BoundaryEvent_0nwzwkd">
+        <dc:Bounds x="2572" y="315" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_17795nu_di" bpmnElement="SequenceFlow_17795nu">
+        <di:waypoint x="2590" y="351" />
+        <di:waypoint x="2590" y="406" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0e7f6s3_di" bpmnElement="IntermediateThrowEvent_0z478qy">
+        <dc:Bounds x="2572" y="406" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2552" y="449" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_1c24274_di" bpmnElement="BoundaryEvent_0br0zyw">
+        <dc:Bounds x="3435" y="181" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1n4oo7b_di" bpmnElement="SequenceFlow_1n4oo7b">
+        <di:waypoint x="3453" y="217" />
+        <di:waypoint x="3453" y="267" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0cyf8ub_di" bpmnElement="IntermediateThrowEvent_0rae6pl">
+        <dc:Bounds x="3435" y="267" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3415" y="310" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_0xm5gt1_di" bpmnElement="BoundaryEvent_0ptqvbn">
+        <dc:Bounds x="4596" y="428" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0dqxpj1_di" bpmnElement="SequenceFlow_0dqxpj1">
+        <di:waypoint x="4614" y="464" />
+        <di:waypoint x="4614" y="519" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1wz6frn_di" bpmnElement="IntermediateThrowEvent_14bq3a4">
+        <dc:Bounds x="4596" y="519" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4576" y="562" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_14ur5te_di" bpmnElement="BoundaryEvent_18qqbvy">
+        <dc:Bounds x="215" y="785" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0mbadf4_di" bpmnElement="SequenceFlow_0mbadf4">
+        <di:waypoint x="233" y="821" />
+        <di:waypoint x="233" y="879" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1aqpwbs_di" bpmnElement="IntermediateThrowEvent_0mhys7w">
+        <dc:Bounds x="215" y="879" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="195" y="922" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_11k6iq8_di" bpmnElement="BoundaryEvent_1t7cpfs">
+        <dc:Bounds x="2361" y="1170" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1v3r45g_di" bpmnElement="SequenceFlow_1v3r45g">
+        <di:waypoint x="2379" y="1206" />
+        <di:waypoint x="2379" y="1241" />
+        <di:waypoint x="2355" y="1241" />
+        <di:waypoint x="2355" y="1276" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0juj9ac_di" bpmnElement="ExclusiveGateway_0juj9ac" isMarkerVisible="true">
+        <dc:Bounds x="993" y="134" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="980" y="191" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1wb1lbr_di" bpmnElement="ExclusiveGateway_1wb1lbr" isMarkerVisible="true">
+        <dc:Bounds x="1555" y="134" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0z4awdf_di" bpmnElement="SequenceFlow_0z4awdf">
+        <di:waypoint x="1605" y="159" />
+        <di:waypoint x="1733" y="159" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1iitvuz_di" bpmnElement="SequenceFlow_1iitvuz">
+        <di:waypoint x="1018" y="134" />
+        <di:waypoint x="1018" y="63" />
+        <di:waypoint x="1580" y="63" />
+        <di:waypoint x="1580" y="134" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1027" y="102" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0j83nyd_di" bpmnElement="ExclusiveGateway_0j83nyd" isMarkerVisible="true">
+        <dc:Bounds x="1387" y="134" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1373" y="84" width="77" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_082hv6l_di" bpmnElement="SequenceFlow_082hv6l">
+        <di:waypoint x="1437" y="159" />
+        <di:waypoint x="1555" y="159" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1490" y="141" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0dsj20a_di" bpmnElement="IntermediateThrowEvent_0dsj20a">
+        <dc:Bounds x="1394" y="251" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1385" y="294" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0tenkyn_di" bpmnElement="SequenceFlow_0tenkyn">
+        <di:waypoint x="1412" y="184" />
+        <di:waypoint x="1412" y="251" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1417" y="215" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_17gnx2l_di" bpmnElement="SequenceFlow_17gnx2l">
+        <di:waypoint x="1043" y="159" />
+        <di:waypoint x="1178" y="159" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1101" y="141" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ps0yeh_di" bpmnElement="SequenceFlow_1ps0yeh">
+        <di:waypoint x="1430" y="269" />
+        <di:waypoint x="1508" y="269" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_09774p2_di" bpmnElement="IntermediateThrowEvent_0g0tpwu">
+        <dc:Bounds x="1508" y="251" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1484" y="294" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1pqhzbs_di" bpmnElement="ExclusiveGateway_1pqhzbs" isMarkerVisible="true">
+        <dc:Bounds x="5589" y="134" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5576" y="84" width="75" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_01j7uau_di" bpmnElement="SequenceFlow_01j7uau">
+        <di:waypoint x="5639" y="159" />
+        <di:waypoint x="5750" y="159" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5689" y="141" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0hl96lv_di" bpmnElement="IntermediateThrowEvent_0hl96lv">
+        <dc:Bounds x="5596" y="251" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5587" y="294" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1hczexe_di" bpmnElement="SequenceFlow_1hczexe">
+        <di:waypoint x="5614" y="184" />
+        <di:waypoint x="5614" y="251" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5619" y="215" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0pzxx7a_di" bpmnElement="SequenceFlow_0pzxx7a">
+        <di:waypoint x="5632" y="269" />
+        <di:waypoint x="5699" y="269" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0brla1z_di" bpmnElement="IntermediateThrowEvent_1oxsgb7">
+        <dc:Bounds x="5699" y="251" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="5675" y="294" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0tg984a_di" bpmnElement="IntermediateThrowEvent_0tg984a">
+        <dc:Bounds x="342" y="1256" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="325" y="1299" width="74" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1u9e7u2_di" bpmnElement="SuccessNoticeTask">
+        <dc:Bounds x="218" y="1108" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_02ehhna_di" bpmnElement="IntermediateThrowEvent_02ehhna">
+        <dc:Bounds x="250" y="1256" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_19ndgfz_di" bpmnElement="BoundaryEvent_19ndgfz">
+        <dc:Bounds x="200" y="1170" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1hymf5t_di" bpmnElement="SequenceFlow_1hymf5t">
+        <di:waypoint x="286" y="1274" />
+        <di:waypoint x="342" y="1274" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0cb9lu7_di" bpmnElement="SequenceFlow_0cb9lu7">
+        <di:waypoint x="268" y="1188" />
+        <di:waypoint x="268" y="1256" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="273" y="1215" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_116cmvp_di" bpmnElement="SequenceFlow_116cmvp">
+        <di:waypoint x="318" y="1148" />
+        <di:waypoint x="492" y="1148" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="348" y="1130" width="85" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0mv94x6_di" bpmnElement="SequenceFlow_0mv94x6">
+        <di:waypoint x="218" y="1206" />
+        <di:waypoint x="218" y="1274" />
+        <di:waypoint x="250" y="1274" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0hx1b2g_di" bpmnElement="ExclusiveGateway_0hx1b2g" isMarkerVisible="true">
+        <dc:Bounds x="492" y="1123" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="486" y="1059.5" width="62" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1yjdk2o_di" bpmnElement="SequenceFlow_1yjdk2o">
+        <di:waypoint x="542" y="1148" />
+        <di:waypoint x="710" y="1148" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="609" y="1129" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_1xzn2i9_di" bpmnElement="IntermediateThrowEvent_1xzn2i9">
+        <dc:Bounds x="499" y="1256" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="442" y="1267" width="55" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1mo15cw_di" bpmnElement="SequenceFlow_1mo15cw">
+        <di:waypoint x="517" y="1173" />
+        <di:waypoint x="517" y="1256" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="524" y="1209" width="13" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0v41szo_di" bpmnElement="SequenceFlow_0v41szo">
+        <di:waypoint x="517" y="1292" />
+        <di:waypoint x="517" y="1352" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_12vmyv6_di" bpmnElement="IntermediateThrowEvent_1uefjdg">
+        <dc:Bounds x="499" y="1352" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="475" y="1395" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0xecfeb_di" bpmnElement="CalculateRepaymentSchedule">
+        <dc:Bounds x="1961" y="1108" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0sfoz18_di" bpmnElement="CalculateRepaymentScheduleErrorTask">
+        <dc:Bounds x="1961" y="1276" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_0f09jmg_di" bpmnElement="BoundaryEvent_0f09jmg">
+        <dc:Bounds x="2043" y="1170" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_072k3np_di" bpmnElement="SequenceFlow_072k3np">
+        <di:waypoint x="1961" y="1316" />
+        <di:waypoint x="1909" y="1316" />
+        <di:waypoint x="1909" y="1170" />
+        <di:waypoint x="1961" y="1170" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1886" y="1240" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1684zv5_di" bpmnElement="SequenceFlow_1684zv5">
+        <di:waypoint x="2061" y="1206" />
+        <di:waypoint x="2061" y="1241" />
+        <di:waypoint x="2011" y="1241" />
+        <di:waypoint x="2011" y="1276" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ivsmou_di" bpmnElement="SequenceFlow_0ivsmou">
+        <di:waypoint x="2061" y="1148" />
+        <di:waypoint x="2279" y="1148" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_1ytw3rx_di" bpmnElement="DetectCustomerStatusService">
+        <dc:Bounds x="2088" y="119" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0j6p3fk_di" bpmnElement="DetectCustomerStatusErrorTask">
+        <dc:Bounds x="2088" y="287" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0su5yzy_di" bpmnElement="IntermediateThrowEvent_0su5yzy">
+        <dc:Bounds x="2257" y="420" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2232" y="463" width="88" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="IntermediateThrowEvent_0425kka_di" bpmnElement="IntermediateThrowEvent_0425kka">
+        <dc:Bounds x="2120" y="420" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2114" y="463" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BoundaryEvent_1my8yiu_di" bpmnElement="BoundaryEvent_1my8yiu">
+        <dc:Bounds x="2170" y="181" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ls3dbh_di" bpmnElement="SequenceFlow_0ls3dbh">
+        <di:waypoint x="2088" y="327" />
+        <di:waypoint x="2036" y="327" />
+        <di:waypoint x="2036" y="181" />
+        <di:waypoint x="2088" y="181" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2013" y="251" width="77" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0egty03_di" bpmnElement="SequenceFlow_0egty03">
+        <di:waypoint x="2188" y="217" />
+        <di:waypoint x="2188" y="252" />
+        <di:waypoint x="2138" y="252" />
+        <di:waypoint x="2138" y="287" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1tqirt5_di" bpmnElement="SequenceFlow_1tqirt5">
+        <di:waypoint x="2138" y="367" />
+        <di:waypoint x="2138" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0dzzw98_di" bpmnElement="SequenceFlow_0dzzw98">
+        <di:waypoint x="2156" y="438" />
+        <di:waypoint x="2257" y="438" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_01et6s3_di" bpmnElement="SequenceFlow_01et6s3">
+        <di:waypoint x="2188" y="159" />
+        <di:waypoint x="2354" y="159" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

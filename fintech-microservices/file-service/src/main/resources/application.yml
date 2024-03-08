@@ -1,0 +1,53 @@
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 30000
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: file-
+  config:
+    import: "optional:configserver:"
+  cloud:
+    config:
+      uri: http://config-server:8888
+#      discovery:
+#        service-id: configserver
+#        enabled: true
+      label: master
+      fail-fast: false
+    service-registry:
+      auto-registration:
+        enabled: true
+  profiles:
+    active:
+      - @spring.profiles.active@
+      - db-@spring.profiles.active@
+      #- jpa-@spring.profiles.active@
+  jackson:
+    serialization:
+     FAIL_ON_EMPTY_BEANS: false
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: @eureka.client.serviceUrl.defaultZone@
+    fetch-registry: true
+    register-with-eureka: true
+
+server:
+  port: 1013
+logging:
+  level:
+    feign=DEBUG:
+  file:
+    name: @app.logging.path@${spring.application.name}/${spring.application.name}.log
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB

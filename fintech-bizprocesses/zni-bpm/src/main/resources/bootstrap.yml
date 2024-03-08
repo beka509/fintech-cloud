@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: zni-bizprocess
+  cloud:
+    config:
+      discovery:
+        service-id: configserver
+        enabled: true
+      label: master
+      fail-fast: true
+    service-registry:
+      auto-registration:
+        enabled: true
+  profiles:
+    active:
+    - camunda-@spring.profiles.active@
+    - db-camunda-@spring.profiles.active@
+    - jpa-@spring.profiles.active@
+eureka:
+  client:
+    serviceUrl.defaultZone: @eureka.client.serviceUrl.defaultZone@
+server:
+  port: 0

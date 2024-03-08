@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_0fr9mxs" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.5.0">
+  <bpmn:process id="SwiftTransfer" name="Переводы Swift" isExecutable="true" camunda:jobPriority="1" camunda:candidateStarterUsers="admin">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_14xll55</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="EndEvent_0x6ir2l">
+      <bpmn:incoming>Flow_0snnene</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="GetBrokerAccount" name="Получить номер брокерского счета" camunda:type="external" camunda:topic="GetBrokerAccount">
+      <bpmn:incoming>Flow_14xll55</bpmn:incoming>
+      <bpmn:outgoing>Flow_1bwmidz</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="Event_1d69kqp" name="Не удалось получить счет из информации о платеже" attachedToRef="GetBrokerAccount">
+      <bpmn:outgoing>Flow_1luaz2g</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_0h7rrai" errorRef="Error_0lkammu" />
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="SaveSwiftPayments" name="Сохранение в Colvir" camunda:type="external" camunda:topic="SaveSwiftPayments">
+      <bpmn:incoming>Flow_0665sh2</bpmn:incoming>
+      <bpmn:outgoing>Flow_1iq944x</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0665sh2" sourceRef="GetTradernetInfo" targetRef="SaveSwiftPayments" />
+    <bpmn:serviceTask id="GetTradernetInfo" name="Получение кода отправителя и соглашения" camunda:type="external" camunda:topic="GetTradernetInfo">
+      <bpmn:incoming>Flow_1bwmidz</bpmn:incoming>
+      <bpmn:outgoing>Flow_0665sh2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1bwmidz" sourceRef="GetBrokerAccount" targetRef="GetTradernetInfo" />
+    <bpmn:sequenceFlow id="Flow_14xll55" sourceRef="StartEvent_1" targetRef="GetBrokerAccount" />
+    <bpmn:endEvent id="Event_1v4jf2p">
+      <bpmn:incoming>Flow_1luaz2g</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1luaz2g" sourceRef="Event_1d69kqp" targetRef="Event_1v4jf2p" />
+    <bpmn:sequenceFlow id="Flow_1iq944x" sourceRef="SaveSwiftPayments" targetRef="Event_0w8qan9" />
+    <bpmn:endEvent id="Event_0iqp8ij">
+      <bpmn:incoming>Flow_0dfjmd9</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:boundaryEvent id="Event_1tn0z4h" name="Нет соединения с Colvir" attachedToRef="SaveSwiftPayments">
+      <bpmn:outgoing>Flow_0dfjmd9</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_1rnv7mh" errorRef="Error_0lkammu" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_0dfjmd9" sourceRef="Event_1tn0z4h" targetRef="Event_0iqp8ij" />
+    <bpmn:endEvent id="Event_0ozefx6">
+      <bpmn:incoming>Flow_03trahy</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:boundaryEvent id="Event_0937kk5" attachedToRef="GetTradernetInfo">
+      <bpmn:outgoing>Flow_03trahy</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_0qhye0o" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_03trahy" name="Нет соединения с Tradernet" sourceRef="Event_0937kk5" targetRef="Event_0ozefx6" />
+    <bpmn:sequenceFlow id="Flow_0snnene" sourceRef="AttachTradernetDocument" targetRef="EndEvent_0x6ir2l" />
+    <bpmn:serviceTask id="AttachTradernetDocument" name="Прикрепление документа" camunda:type="external" camunda:topic="AttachTradernetDocument">
+      <bpmn:incoming>Flow_1lkhaut</bpmn:incoming>
+      <bpmn:outgoing>Flow_0snnene</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:intermediateCatchEvent id="Event_0w8qan9" name="5 минут">
+      <bpmn:incoming>Flow_1iq944x</bpmn:incoming>
+      <bpmn:outgoing>Flow_1lkhaut</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_0wl08kk">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT5M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:sequenceFlow id="Flow_1lkhaut" sourceRef="Event_0w8qan9" targetRef="AttachTradernetDocument" />
+    <bpmn:endEvent id="Event_1hptj29">
+      <bpmn:incoming>Flow_0ahze1c</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:boundaryEvent id="Event_1khk7p9" name="Не удалось сохранить документ" attachedToRef="AttachTradernetDocument">
+      <bpmn:outgoing>Flow_0ahze1c</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_0ro6utb" errorRef="Error_0lkammu" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_0ahze1c" sourceRef="Event_1khk7p9" targetRef="Event_1hptj29" />
+  </bpmn:process>
+  <bpmn:error id="Error_0lkammu" name="SystemError" errorCode="SystemError" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="SwiftTransfer">
+      <bpmndi:BPMNEdge id="Flow_0ahze1c_di" bpmnElement="Flow_0ahze1c">
+        <di:waypoint x="1300" y="175" />
+        <di:waypoint x="1300" y="232" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1lkhaut_di" bpmnElement="Flow_1lkhaut">
+        <di:waypoint x="1078" y="117" />
+        <di:waypoint x="1200" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0snnene_di" bpmnElement="Flow_0snnene">
+        <di:waypoint x="1300" y="117" />
+        <di:waypoint x="1372" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_03trahy_di" bpmnElement="Flow_03trahy">
+        <di:waypoint x="660" y="175" />
+        <di:waypoint x="660" y="232" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="661" y="216" width="83" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0dfjmd9_di" bpmnElement="Flow_0dfjmd9">
+        <di:waypoint x="880" y="175" />
+        <di:waypoint x="880" y="232" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1iq944x_di" bpmnElement="Flow_1iq944x">
+        <di:waypoint x="880" y="117" />
+        <di:waypoint x="1042" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1luaz2g_di" bpmnElement="Flow_1luaz2g">
+        <di:waypoint x="460" y="175" />
+        <di:waypoint x="460" y="232" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14xll55_di" bpmnElement="Flow_14xll55">
+        <di:waypoint x="188" y="117" />
+        <di:waypoint x="360" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1bwmidz_di" bpmnElement="Flow_1bwmidz">
+        <di:waypoint x="460" y="117" />
+        <di:waypoint x="560" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0665sh2_di" bpmnElement="Flow_0665sh2">
+        <di:waypoint x="660" y="117" />
+        <di:waypoint x="780" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0x6ir2l_di" bpmnElement="EndEvent_0x6ir2l">
+        <dc:Bounds x="1372" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1fl5ilf_di" bpmnElement="GetBrokerAccount">
+        <dc:Bounds x="360" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_179gg3i_di" bpmnElement="SaveSwiftPayments">
+        <dc:Bounds x="780" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0kt76ur_di" bpmnElement="GetTradernetInfo">
+        <dc:Bounds x="560" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1v4jf2p_di" bpmnElement="Event_1v4jf2p">
+        <dc:Bounds x="442" y="232" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0iqp8ij_di" bpmnElement="Event_0iqp8ij">
+        <dc:Bounds x="862" y="232" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0ozefx6_di" bpmnElement="Event_0ozefx6">
+        <dc:Bounds x="642" y="232" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0b0uxra_di" bpmnElement="AttachTradernetDocument">
+        <dc:Bounds x="1200" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1lovg6q_di" bpmnElement="Event_0w8qan9">
+        <dc:Bounds x="1042" y="99" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1041" y="142" width="40" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1hptj29_di" bpmnElement="Event_1hptj29">
+        <dc:Bounds x="1282" y="232" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1khk7p9_di" bpmnElement="Event_1khk7p9">
+        <dc:Bounds x="1282" y="139" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1320" y="186" width="59" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_14wz534_di" bpmnElement="Event_0937kk5">
+        <dc:Bounds x="642" y="139" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0mdyo4w_di" bpmnElement="Event_1tn0z4h">
+        <dc:Bounds x="862" y="139" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="888" y="186" width="83" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0s9b9ue_di" bpmnElement="Event_1d69kqp">
+        <dc:Bounds x="442" y="139" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="475" y="163" width="90" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_0cxhmbn" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.11.1">
+  <bpmn:process id="GuaranteeOperationProcess" name="Операции с&#10;гарантиями" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_1hhj5ql</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="PaymentExpiration" name="Истечение срока гарант. обяз." camunda:type="external" camunda:topic="PaymentExpiration">
+      <bpmn:incoming>Flow_0k35oyg</bpmn:incoming>
+      <bpmn:outgoing>Flow_04a2knv</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="EndEvent_19qwc9h">
+      <bpmn:incoming>Flow_0uyw9kv</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="EarlyRepayment" name="Досрочное погашение" camunda:type="external" camunda:topic="EarlyRepayment">
+      <bpmn:incoming>Flow_0jpu136</bpmn:incoming>
+      <bpmn:outgoing>Flow_0hc8onc</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0hc8onc" sourceRef="EarlyRepayment" targetRef="Gateway_16rw95c" />
+    <bpmn:sequenceFlow id="Flow_1hhj5ql" sourceRef="StartEvent_1" targetRef="Activity_0veu27p" />
+    <bpmn:sequenceFlow id="Flow_04a2knv" sourceRef="PaymentExpiration" targetRef="Gateway_16rw95c" />
+    <bpmn:exclusiveGateway id="Gateway_16rw95c" name="Проверить статус">
+      <bpmn:incoming>Flow_0hc8onc</bpmn:incoming>
+      <bpmn:incoming>Flow_04a2knv</bpmn:incoming>
+      <bpmn:outgoing>Flow_0uyw9kv</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0e030i3</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_0uyw9kv" name="Успешно" sourceRef="Gateway_16rw95c" targetRef="EndEvent_19qwc9h">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${result=='OK'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="Event_0q389gv">
+      <bpmn:incoming>Flow_0e030i3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0e030i3" name="Ошибка или нет данных" sourceRef="Gateway_16rw95c" targetRef="Event_0q389gv">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${result!='OK'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="Activity_0veu27p" name="Проверка параметров" camunda:type="external" camunda:topic="CheckParameters">
+      <bpmn:incoming>Flow_1hhj5ql</bpmn:incoming>
+      <bpmn:outgoing>Flow_0jpu136</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0k35oyg</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0jpu136" sourceRef="Activity_0veu27p" targetRef="EarlyRepayment">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${result=='EARLY_REPAYMENT'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0k35oyg" sourceRef="Activity_0veu27p" targetRef="PaymentExpiration">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${result=='EXPIRATION'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="GuaranteeOperationProcess">
+      <bpmndi:BPMNEdge id="Flow_0e030i3_di" bpmnElement="Flow_0e030i3">
+        <di:waypoint x="847" y="328" />
+        <di:waypoint x="910" y="360" />
+        <di:waypoint x="910" y="482" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="867" y="409" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0uyw9kv_di" bpmnElement="Flow_0uyw9kv">
+        <di:waypoint x="848" y="313" />
+        <di:waypoint x="910" y="290" />
+        <di:waypoint x="910" y="188" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="888" y="233" width="44" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04a2knv_di" bpmnElement="Flow_04a2knv">
+        <di:waypoint x="620" y="420" />
+        <di:waypoint x="830" y="420" />
+        <di:waypoint x="830" y="345" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1hhj5ql_di" bpmnElement="Flow_1hhj5ql">
+        <di:waypoint x="200" y="98" />
+        <di:waypoint x="200" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0hc8onc_di" bpmnElement="Flow_0hc8onc">
+        <di:waypoint x="620" y="240" />
+        <di:waypoint x="830" y="240" />
+        <di:waypoint x="830" y="295" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0jpu136_di" bpmnElement="Flow_0jpu136">
+        <di:waypoint x="250" y="240" />
+        <di:waypoint x="520" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0k35oyg_di" bpmnElement="Flow_0k35oyg">
+        <di:waypoint x="200" y="280" />
+        <di:waypoint x="200" y="420" />
+        <di:waypoint x="520" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ServiceTask_18yvypx_di" bpmnElement="EarlyRepayment">
+        <dc:Bounds x="520" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0o8d7ui_di" bpmnElement="PaymentExpiration">
+        <dc:Bounds x="520" y="380" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="182" y="62" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_16rw95c_di" bpmnElement="Gateway_16rw95c" isMarkerVisible="true">
+        <dc:Bounds x="805" y="295" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="739" y="306" width="56" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_19qwc9h_di" bpmnElement="EndEvent_19qwc9h">
+        <dc:Bounds x="892" y="152" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0q389gv_di" bpmnElement="Event_0q389gv">
+        <dc:Bounds x="892" y="482" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="807" y="32" width="46" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0veu27p_di" bpmnElement="Activity_0veu27p">
+        <dc:Bounds x="150" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,0 +1,475 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_0i757js" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.11.1" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.15.0">
+  <bpmn:process id="SmartVistaPersonProduct" name="Создание в smartvista клиента, счета, карты" isExecutable="true" camunda:versionTag="3">
+    <bpmn:startEvent id="StartEvent_1" name="Запуск">
+      <bpmn:outgoing>Flow_0wsachp</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0wsachp" sourceRef="StartEvent_1" targetRef="GetColvirXmlBody" />
+    <bpmn:serviceTask id="GetColvirXmlBody" name="Получение тела xml с АБИС" camunda:asyncBefore="true" camunda:type="external" camunda:topic="GetColvirXmlBody" camunda:taskPriority="110">
+      <bpmn:incoming>Flow_0wsachp</bpmn:incoming>
+      <bpmn:incoming>Flow_11eq6d4</bpmn:incoming>
+      <bpmn:outgoing>Flow_1a4gaml</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="SendToSmartVista" name="Вызов веб-сервиса SmartVista" camunda:asyncBefore="true" camunda:type="external" camunda:topic="SendToSmartVista" camunda:taskPriority="110">
+      <bpmn:incoming>Flow_1ujox47</bpmn:incoming>
+      <bpmn:incoming>Flow_1wdr4fn</bpmn:incoming>
+      <bpmn:outgoing>Flow_0cnfquu</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0cnfquu" sourceRef="SendToSmartVista" targetRef="WriteResponseWsToColvir" />
+    <bpmn:serviceTask id="WriteResponseWsToColvir" name="Запись ответа веб-сервиса в АБИС" camunda:asyncBefore="true" camunda:type="external" camunda:topic="WriteResponseWsToColvir" camunda:taskPriority="110">
+      <bpmn:incoming>Flow_0cnfquu</bpmn:incoming>
+      <bpmn:incoming>Flow_1jn3jff</bpmn:incoming>
+      <bpmn:outgoing>Flow_0mzgjyt</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1ujox47" sourceRef="ChangeColvirMessageStatus" targetRef="SendToSmartVista" />
+    <bpmn:serviceTask id="ChangeColvirMessageStatus" name="Изменение статуса сообщения в АБИС" camunda:asyncBefore="true" camunda:type="external" camunda:topic="ChangeColvirMessageStatus" camunda:taskPriority="110">
+      <bpmn:incoming>Flow_0gi9kc7</bpmn:incoming>
+      <bpmn:incoming>Flow_1a4gaml</bpmn:incoming>
+      <bpmn:outgoing>Flow_1ujox47</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Event_1etb4ts" name="Завершение">
+      <bpmn:incoming>Flow_1u0f5k4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0mzgjyt" sourceRef="WriteResponseWsToColvir" targetRef="FinishProcessSuccess" />
+    <bpmn:sequenceFlow id="Flow_1u0f5k4" sourceRef="FinishProcessSuccess" targetRef="Event_1etb4ts" />
+    <bpmn:serviceTask id="FinishProcessSuccess" name="Завершение процесса" camunda:asyncBefore="true" camunda:type="external" camunda:topic="FinishProcessSuccess" camunda:taskPriority="110">
+      <bpmn:incoming>Flow_0mzgjyt</bpmn:incoming>
+      <bpmn:incoming>Flow_1o721is</bpmn:incoming>
+      <bpmn:outgoing>Flow_1u0f5k4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:intermediateCatchEvent id="Event_1hk2fvg" name="StopProcess">
+      <bpmn:outgoing>Flow_0li54mi</bpmn:outgoing>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_1i72h6d" name="StopProcess" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="FinishProcessError" name="Завершение процесса с ошибкой" camunda:asyncBefore="true" camunda:type="external" camunda:topic="FinishProcessError" camunda:taskPriority="110">
+      <bpmn:incoming>Flow_0li54mi</bpmn:incoming>
+      <bpmn:incoming>Flow_0vrrjqr</bpmn:incoming>
+      <bpmn:outgoing>Flow_0run77v</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Event_19eg9eg" name="Завершение">
+      <bpmn:incoming>Flow_0run77v</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Activity_15xq6qn" name="Обработка ошибок" camunda:formKey="/card/invest-card/forms/error" camunda:candidateGroups="SMARTVISTA_INTEGRA_ADMIN">
+      <bpmn:incoming>Flow_0qne81e</bpmn:incoming>
+      <bpmn:outgoing>Flow_0vrrjqr</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="Event_1k0l98k" attachedToRef="FinishProcessError">
+      <bpmn:outgoing>Flow_0qne81e</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_014hfau" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_0li54mi" sourceRef="Event_1hk2fvg" targetRef="FinishProcessError" />
+    <bpmn:sequenceFlow id="Flow_0vrrjqr" sourceRef="Activity_15xq6qn" targetRef="FinishProcessError" />
+    <bpmn:sequenceFlow id="Flow_0run77v" sourceRef="FinishProcessError" targetRef="Event_19eg9eg" />
+    <bpmn:sequenceFlow id="Flow_0qne81e" sourceRef="Event_1k0l98k" targetRef="Activity_15xq6qn" />
+    <bpmn:userTask id="Activity_00wzmvn" name="Обработка ошибок" camunda:candidateGroups="SMARTVISTA_INTEGRA_ADMIN">
+      <bpmn:incoming>Flow_1rc0cxa</bpmn:incoming>
+      <bpmn:outgoing>Flow_02tqgzt</bpmn:outgoing>
+      <bpmn:outgoing>Flow_11eq6d4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="Event_04fns63">
+      <bpmn:incoming>Flow_02tqgzt</bpmn:incoming>
+      <bpmn:outgoing>Flow_0icdabl</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="Event_0qcl2e3" name="StopProcess">
+      <bpmn:incoming>Flow_0icdabl</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_148teg0" name="StopProcess" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="Flow_02tqgzt" name="Завершить" sourceRef="Activity_00wzmvn" targetRef="Event_04fns63">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0icdabl" sourceRef="Event_04fns63" targetRef="Event_0qcl2e3" />
+    <bpmn:sequenceFlow id="Flow_11eq6d4" name="Повторить" sourceRef="Activity_00wzmvn" targetRef="GetColvirXmlBody">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:boundaryEvent id="Event_0jqz8ub" attachedToRef="GetColvirXmlBody">
+      <bpmn:outgoing>Flow_1rc0cxa</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_152lbb8" errorRef="Error_00jusip" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_1rc0cxa" sourceRef="Event_0jqz8ub" targetRef="Activity_00wzmvn" />
+    <bpmn:userTask id="Activity_12zf05o" name="Обработка ошибок" camunda:candidateGroups="SMARTVISTA_INTEGRA_ADMIN">
+      <bpmn:incoming>Flow_0t03gu2</bpmn:incoming>
+      <bpmn:outgoing>Flow_0ltuzz3</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0gi9kc7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="Event_0zccgxd">
+      <bpmn:incoming>Flow_0ltuzz3</bpmn:incoming>
+      <bpmn:outgoing>Flow_0rnp7k3</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="Event_02qxuyp" name="StopProcess">
+      <bpmn:incoming>Flow_0rnp7k3</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_031uacv" name="StopProcess" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="Flow_0ltuzz3" name="Завершить" sourceRef="Activity_12zf05o" targetRef="Event_0zccgxd">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0rnp7k3" sourceRef="Event_0zccgxd" targetRef="Event_02qxuyp" />
+    <bpmn:userTask id="Activity_19nhjam" name="Обработка ошибок" camunda:candidateGroups="SMARTVISTA_INTEGRA_ADMIN">
+      <bpmn:incoming>Flow_1vz5f91</bpmn:incoming>
+      <bpmn:outgoing>Flow_0lnjf60</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1wdr4fn</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="Event_00oi8uh">
+      <bpmn:incoming>Flow_0lnjf60</bpmn:incoming>
+      <bpmn:outgoing>Flow_1qrpxrj</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="Event_1tznn0n" name="StopProcess">
+      <bpmn:incoming>Flow_1qrpxrj</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_11xs5zq" name="StopProcess" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="Flow_0lnjf60" name="Завершить" sourceRef="Activity_19nhjam" targetRef="Event_00oi8uh">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1qrpxrj" sourceRef="Event_00oi8uh" targetRef="Event_1tznn0n" />
+    <bpmn:userTask id="Activity_1ss5mtn" name="Обработка ошибок" camunda:candidateGroups="SMARTVISTA_INTEGRA_ADMIN">
+      <bpmn:incoming>Flow_08w7g1b</bpmn:incoming>
+      <bpmn:outgoing>Flow_1l4euwd</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1jn3jff</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="Event_0oy1iqj">
+      <bpmn:incoming>Flow_1l4euwd</bpmn:incoming>
+      <bpmn:outgoing>Flow_0121kzt</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="Event_11mjdew" name="StopProcess">
+      <bpmn:incoming>Flow_0121kzt</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_1lt7rjt" name="StopProcess" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="Flow_1l4euwd" name="Завершить" sourceRef="Activity_1ss5mtn" targetRef="Event_0oy1iqj">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0121kzt" sourceRef="Event_0oy1iqj" targetRef="Event_11mjdew" />
+    <bpmn:userTask id="Activity_0u94olt" name="Обработка ошибок" camunda:candidateGroups="SMARTVISTA_INTEGRA_ADMIN">
+      <bpmn:incoming>Flow_07grbd0</bpmn:incoming>
+      <bpmn:outgoing>Flow_0j1l5h0</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1o721is</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:intermediateThrowEvent id="Event_1wcp5vh">
+      <bpmn:incoming>Flow_0j1l5h0</bpmn:incoming>
+      <bpmn:outgoing>Flow_15qc2fi</bpmn:outgoing>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:intermediateThrowEvent id="Event_1lp92tq" name="StopProcess">
+      <bpmn:incoming>Flow_15qc2fi</bpmn:incoming>
+      <bpmn:linkEventDefinition id="LinkEventDefinition_0njj8il" name="StopProcess" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:sequenceFlow id="Flow_0j1l5h0" name="Завершить" sourceRef="Activity_0u94olt" targetRef="Event_1wcp5vh">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='CANCEL'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_15qc2fi" sourceRef="Event_1wcp5vh" targetRef="Event_1lp92tq" />
+    <bpmn:boundaryEvent id="Event_0t223w5" attachedToRef="ChangeColvirMessageStatus">
+      <bpmn:outgoing>Flow_0t03gu2</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_1htwypq" errorRef="Error_00o924j" />
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="Event_0f49mid" attachedToRef="SendToSmartVista">
+      <bpmn:outgoing>Flow_1vz5f91</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_1ikwzke" errorRef="Error_0emdxww" />
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="Event_0l3robo" attachedToRef="WriteResponseWsToColvir">
+      <bpmn:outgoing>Flow_08w7g1b</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_1kxxhhj" errorRef="Error_1a8v8by" />
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="Event_0vqqbm8" attachedToRef="FinishProcessSuccess">
+      <bpmn:outgoing>Flow_07grbd0</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_07p0cv9" errorRef="Error_1d0f7h8" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_0t03gu2" sourceRef="Event_0t223w5" targetRef="Activity_12zf05o" />
+    <bpmn:sequenceFlow id="Flow_1vz5f91" sourceRef="Event_0f49mid" targetRef="Activity_19nhjam" />
+    <bpmn:sequenceFlow id="Flow_08w7g1b" sourceRef="Event_0l3robo" targetRef="Activity_1ss5mtn" />
+    <bpmn:sequenceFlow id="Flow_07grbd0" sourceRef="Event_0vqqbm8" targetRef="Activity_0u94olt" />
+    <bpmn:sequenceFlow id="Flow_0gi9kc7" name="Повторить" sourceRef="Activity_12zf05o" targetRef="ChangeColvirMessageStatus">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1wdr4fn" name="Повторить" sourceRef="Activity_19nhjam" targetRef="SendToSmartVista">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1jn3jff" name="Повторить" sourceRef="Activity_1ss5mtn" targetRef="WriteResponseWsToColvir">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1o721is" name="Повторить" sourceRef="Activity_0u94olt" targetRef="FinishProcessSuccess">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${decision=='RETRY'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1a4gaml" sourceRef="GetColvirXmlBody" targetRef="ChangeColvirMessageStatus" />
+  </bpmn:process>
+  <bpmn:error id="Error_00jusip" name="SystemError" errorCode="SystemError" />
+  <bpmn:error id="Error_00o924j" name="SystemError" errorCode="SystemError" />
+  <bpmn:error id="Error_0emdxww" name="SystemError" errorCode="SystemError" />
+  <bpmn:error id="Error_1a8v8by" name="SystemError" errorCode="SystemError" />
+  <bpmn:error id="Error_1d0f7h8" name="SystemError" errorCode="SystemError" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="SmartVistaPersonProduct">
+      <bpmndi:BPMNEdge id="Flow_1a4gaml_di" bpmnElement="Flow_1a4gaml">
+        <di:waypoint x="360" y="120" />
+        <di:waypoint x="570" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1o721is_di" bpmnElement="Flow_1o721is">
+        <di:waypoint x="1490" y="220" />
+        <di:waypoint x="1490" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1423" y="187" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1jn3jff_di" bpmnElement="Flow_1jn3jff">
+        <di:waypoint x="1220" y="220" />
+        <di:waypoint x="1220" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1153" y="187" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1wdr4fn_di" bpmnElement="Flow_1wdr4fn">
+        <di:waypoint x="930" y="220" />
+        <di:waypoint x="930" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="863" y="187" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0gi9kc7_di" bpmnElement="Flow_0gi9kc7">
+        <di:waypoint x="620" y="220" />
+        <di:waypoint x="620" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="553" y="187" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_07grbd0_di" bpmnElement="Flow_07grbd0">
+        <di:waypoint x="1530" y="175" />
+        <di:waypoint x="1530" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_08w7g1b_di" bpmnElement="Flow_08w7g1b">
+        <di:waypoint x="1260" y="175" />
+        <di:waypoint x="1260" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1vz5f91_di" bpmnElement="Flow_1vz5f91">
+        <di:waypoint x="970" y="175" />
+        <di:waypoint x="970" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0t03gu2_di" bpmnElement="Flow_0t03gu2">
+        <di:waypoint x="660" y="175" />
+        <di:waypoint x="660" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15qc2fi_di" bpmnElement="Flow_15qc2fi">
+        <di:waypoint x="1508" y="380" />
+        <di:waypoint x="1572" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0j1l5h0_di" bpmnElement="Flow_0j1l5h0">
+        <di:waypoint x="1490" y="300" />
+        <di:waypoint x="1490" y="362" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1421" y="328" width="57" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0121kzt_di" bpmnElement="Flow_0121kzt">
+        <di:waypoint x="1238" y="380" />
+        <di:waypoint x="1302" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1l4euwd_di" bpmnElement="Flow_1l4euwd">
+        <di:waypoint x="1220" y="300" />
+        <di:waypoint x="1220" y="362" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1151" y="328" width="57" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1qrpxrj_di" bpmnElement="Flow_1qrpxrj">
+        <di:waypoint x="948" y="380" />
+        <di:waypoint x="1012" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lnjf60_di" bpmnElement="Flow_0lnjf60">
+        <di:waypoint x="930" y="300" />
+        <di:waypoint x="930" y="362" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="861" y="328" width="57" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0rnp7k3_di" bpmnElement="Flow_0rnp7k3">
+        <di:waypoint x="638" y="380" />
+        <di:waypoint x="702" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ltuzz3_di" bpmnElement="Flow_0ltuzz3">
+        <di:waypoint x="620" y="300" />
+        <di:waypoint x="620" y="362" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="551" y="328" width="57" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1rc0cxa_di" bpmnElement="Flow_1rc0cxa">
+        <di:waypoint x="350" y="175" />
+        <di:waypoint x="350" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11eq6d4_di" bpmnElement="Flow_11eq6d4">
+        <di:waypoint x="310" y="220" />
+        <di:waypoint x="310" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="243" y="187" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0icdabl_di" bpmnElement="Flow_0icdabl">
+        <di:waypoint x="328" y="380" />
+        <di:waypoint x="392" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_02tqgzt_di" bpmnElement="Flow_02tqgzt">
+        <di:waypoint x="310" y="300" />
+        <di:waypoint x="310" y="362" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="241" y="328" width="57" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0qne81e_di" bpmnElement="Flow_0qne81e">
+        <di:waypoint x="400" y="598" />
+        <di:waypoint x="400" y="629" />
+        <di:waypoint x="380" y="629" />
+        <di:waypoint x="380" y="660" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0run77v_di" bpmnElement="Flow_0run77v">
+        <di:waypoint x="400" y="540" />
+        <di:waypoint x="492" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0vrrjqr_di" bpmnElement="Flow_0vrrjqr">
+        <di:waypoint x="350" y="660" />
+        <di:waypoint x="350" y="580" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0li54mi_di" bpmnElement="Flow_0li54mi">
+        <di:waypoint x="208" y="540" />
+        <di:waypoint x="300" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1u0f5k4_di" bpmnElement="Flow_1u0f5k4">
+        <di:waypoint x="1540" y="120" />
+        <di:waypoint x="1652" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0mzgjyt_di" bpmnElement="Flow_0mzgjyt">
+        <di:waypoint x="1270" y="120" />
+        <di:waypoint x="1440" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ujox47_di" bpmnElement="Flow_1ujox47">
+        <di:waypoint x="670" y="120" />
+        <di:waypoint x="880" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0cnfquu_di" bpmnElement="Flow_0cnfquu">
+        <di:waypoint x="980" y="120" />
+        <di:waypoint x="1170" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0wsachp_di" bpmnElement="Flow_0wsachp">
+        <di:waypoint x="208" y="120" />
+        <di:waypoint x="260" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="172" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="173" y="145" width="36" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0843uyv_di" bpmnElement="GetColvirXmlBody">
+        <dc:Bounds x="260" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0nzsue9_di" bpmnElement="SendToSmartVista">
+        <dc:Bounds x="880" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_03clm50_di" bpmnElement="WriteResponseWsToColvir">
+        <dc:Bounds x="1170" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1tnziu9_di" bpmnElement="ChangeColvirMessageStatus">
+        <dc:Bounds x="570" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1etb4ts_di" bpmnElement="Event_1etb4ts">
+        <dc:Bounds x="1652" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1638" y="145" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_16c2cqf_di" bpmnElement="FinishProcessSuccess">
+        <dc:Bounds x="1440" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1hk2fvg_di" bpmnElement="Event_1hk2fvg">
+        <dc:Bounds x="172" y="522" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="160" y="565" width="63" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0u3p4sf_di" bpmnElement="FinishProcessError">
+        <dc:Bounds x="300" y="500" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_19eg9eg_di" bpmnElement="Event_19eg9eg">
+        <dc:Bounds x="492" y="522" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="479" y="565" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_15xq6qn_di" bpmnElement="Activity_15xq6qn">
+        <dc:Bounds x="300" y="660" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_00wzmvn_di" bpmnElement="Activity_00wzmvn">
+        <dc:Bounds x="260" y="220" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_04fns63_di" bpmnElement="Event_04fns63">
+        <dc:Bounds x="292" y="362" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0qcl2e3_di" bpmnElement="Event_0qcl2e3">
+        <dc:Bounds x="392" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="379" y="406" width="63" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_12zf05o_di" bpmnElement="Activity_12zf05o">
+        <dc:Bounds x="570" y="220" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0zccgxd_di" bpmnElement="Event_0zccgxd">
+        <dc:Bounds x="602" y="362" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_02qxuyp_di" bpmnElement="Event_02qxuyp">
+        <dc:Bounds x="702" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="689" y="406" width="63" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_19nhjam_di" bpmnElement="Activity_19nhjam">
+        <dc:Bounds x="880" y="220" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_00oi8uh_di" bpmnElement="Event_00oi8uh">
+        <dc:Bounds x="912" y="362" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1tznn0n_di" bpmnElement="Event_1tznn0n">
+        <dc:Bounds x="1012" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="999" y="406" width="63" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1ss5mtn_di" bpmnElement="Activity_1ss5mtn">
+        <dc:Bounds x="1170" y="220" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0oy1iqj_di" bpmnElement="Event_0oy1iqj">
+        <dc:Bounds x="1202" y="362" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_11mjdew_di" bpmnElement="Event_11mjdew">
+        <dc:Bounds x="1302" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1289" y="406" width="63" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0u94olt_di" bpmnElement="Activity_0u94olt">
+        <dc:Bounds x="1440" y="220" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1wcp5vh_di" bpmnElement="Event_1wcp5vh">
+        <dc:Bounds x="1472" y="362" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1lp92tq_di" bpmnElement="Event_1lp92tq">
+        <dc:Bounds x="1572" y="362" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1559" y="406" width="63" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0vqqbm8_di" bpmnElement="Event_0vqqbm8">
+        <dc:Bounds x="1522" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0l3robo_di" bpmnElement="Event_0l3robo">
+        <dc:Bounds x="1252" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0f49mid_di" bpmnElement="Event_0f49mid">
+        <dc:Bounds x="962" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0t223w5_di" bpmnElement="Event_0t223w5">
+        <dc:Bounds x="652" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0tdwu3p_di" bpmnElement="Event_0jqz8ub">
+        <dc:Bounds x="342" y="142" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1k0l98k_di" bpmnElement="Event_1k0l98k">
+        <dc:Bounds x="382" y="562" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

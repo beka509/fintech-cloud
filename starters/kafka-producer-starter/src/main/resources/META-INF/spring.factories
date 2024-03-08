@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  kz.fintech.starter.kafka.producer.config.KafkaProducerAutoConfig

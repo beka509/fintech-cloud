@@ -1,0 +1,55 @@
+package kz.fintech.models;
+
+public interface SchemaNames {
+    String PUBLIC = "public";
+    String NRI = "nri";
+    String PRC = "prc";
+    String PROCESS = "process";
+    String CIF = "cif";
+    String CSD = "csd";
+    String COLVIR = "colvir";
+    String CAP = "cap";
+    String EDB = "edb";
+    String FCB = "fcb";
+    String FILE = "file";
+    String LOGS = "logs";
+    String MORTGAGE = "mortgage";
+    String ESF = "esf";
+    String BAILIFF = "bailiff";
+    String PT = "pt";
+    String ABS = "abs";
+    String SERVICE_DESK = "service_desk";
+    String PUBLIC_SOURCES = "public_sources";
+    String CHAT = "chat";
+    String BUDGET = "budget";
+    String COMPLIANCE = "compliance";
+    String PROVISION = "provisions";
+    String CONTACT_CENTER = "contact_center";
+    String HR = "hr";
+    String TM_OBJECTS = "tm_objects";
+    String SAFETY_DEPOSIT_BOXES = "safety_deposit_box";
+    String CARD = "card";
+    String CONTRACT = "contract";
+    String SCORING = "scoring";
+    String EXPRESS_LOAN = "express_loan";
+    String POS = "pos";
+    String INVEST_CARD = "invest_card";
+    String MULTICURRENCY_CARD = "multicurrency_card";
+    String AIFC = "aifc";
+    String MFCA = "mfca";
+    String OPEN_CARD = "open_card";
+    String MFO = "mfo";
+    String TRANSFER = "transfer";
+    String SMP = "smp";
+    String SMP_2_0 = "smp_2_0";
+    String HS_COLLECTION = "hs_collection";
+    String SALARY_PROJECT = "salary_project";
+    String TELEGRAM_BOT = "telegram_bot";
+    String APP_MIB = "mib_kassanova";
+    String GUARANTEE = "guarantee";
+    String KORONA_PAY = "korona_pay";
+    String SMARTVISTA_INTEGRA = "smartvista_integra";
+    String ACCOUNT = "acc";
+    String INTERNET_BANKING = "internet_banking";
+
+}

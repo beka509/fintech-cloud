@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/"
+		xmlns:soap12bind="http://schemas.xmlsoap.org/wsdl/soap12/"
+		xmlns:soapbind="http://schemas.xmlsoap.org/wsdl/soap/"
+		xmlns:tns="http://www.integracia.kz"
+		xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy"
+		xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
+		xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+		xmlns:xsd1="http://www.integracia.kz"
+		name="PaymentServices"
+		targetNamespace="http://www.integracia.kz">
+	<types>
+		<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+				xmlns:xs1="http://www.integracia.kz"
+				targetNamespace="http://www.integracia.kz"
+				attributeFormDefault="unqualified"
+				elementFormDefault="qualified">
+			<xs:complexType name="contract">
+				<xs:sequence>
+					<xs:element name="contract_number"
+							type="xs:string"/>
+					<xs:element name="contract_date"
+							type="xs:date"/>
+					<xs:element name="amount_of_debt"
+							type="xs:decimal"/>
+					<xs:element name="arrears"
+							type="xs:decimal"/>
+					<xs:element name="planned_payment_date"
+							type="xs:date"/>
+					<xs:element name="planned_payment_amount"
+							type="xs:decimal"/>
+					<xs:element name="minimum_amount_of_partial_repayment"
+							type="xs:decimal"/>
+				</xs:sequence>
+			</xs:complexType>
+			<xs:complexType name="contracts">
+				<xs:sequence>
+					<xs:element name="contract"
+							type="tns:contract"
+							minOccurs="0"
+							maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:complexType>
+			<xs:complexType name="payment_app">
+				<xs:sequence>
+					<xs:element name="command">
+						<xs:simpleType>
+							<xs:restriction base="xs:string">
+								<xs:enumeration value="check"/>
+								<xs:enumeration value="pay"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:element>
+					<xs:element name="txn_id"
+							type="xs:string"/>
+					<xs:element name="account"
+							type="xs:string"/>
+					<xs:element name="sum"
+							type="xs:decimal"/>
+					<xs:element name="pay_type">
+						<xs:simpleType>
+							<xs:restriction base="xs:integer">
+								<xs:enumeration value="1"/>
+								<xs:enumeration value="2"/>
+								<xs:enumeration value="3"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:element>
+					<xs:element name="txn_date"
+							type="xs:dateTime"
+							minOccurs="0"/>
+					<xs:element name="contract_number"
+							type="xs:string"
+							minOccurs="0"/>
+					<xs:element name="contract_date"
+							type="xs:date"
+							minOccurs="0"/>
+					<xs:element name="service_name"
+							type="xs:string"/>
+				</xs:sequence>
+			</xs:complexType>
+			<xs:complexType name="response">
+				<xs:sequence>
+					<xs:element name="osmp_txn_id"
+							type="xs:string"/>
+					<xs:element name="result"
+							type="xs:string"/>
+					<xs:element name="comment"
+							type="xs:string"/>
+					<xs:element name="prv_txn"
+							type="xs:string"/>
+					<xs:element name="sum"
+							type="xs:decimal"/>
+					<xs:element name="account"
+							type="xs:string"/>
+					<xs:element name="fio"
+							type="xs:string"/>
+					<xs:element name="account_balance"
+							type="xs:decimal"/>
+					<xs:element name="contracts"
+							type="tns:contracts"/>
+				</xs:sequence>
+			</xs:complexType>
+			<xs:element name="payment">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="Data"
+								type="tns:payment_app"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="paymentResponse">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="return"
+								type="xs:string"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:schema>
+	</types>
+	<message name="paymentRequestMessage">
+		<part name="parameters"
+				element="tns:payment"/>
+	</message>
+	<message name="paymentResponseMessage">
+		<part name="parameters"
+				element="tns:paymentResponse"/>
+	</message>
+	<portType name="PaymentServicesPortType">
+		<operation name="payment">
+			<input message="tns:paymentRequestMessage"/>
+			<output message="tns:paymentResponseMessage"/>
+		</operation>
+	</portType>
+	<binding name="PaymentServicesSoapBinding"
+			type="tns:PaymentServicesPortType">
+		<soapbind:binding style="document"
+				transport="http://schemas.xmlsoap.org/soap/http"/>
+		<operation name="payment">
+			<soapbind:operation style="document"
+					soapAction="http://www.integracia.kz#PaymentServices:payment"/>
+			<input>
+				<soapbind:body use="literal"/>
+			</input>
+			<output>
+				<soapbind:body use="literal"/>
+			</output>
+		</operation>
+	</binding>
+	<binding name="PaymentServicesSoap12Binding"
+			type="tns:PaymentServicesPortType">
+		<soap12bind:binding style="document"
+				transport="http://schemas.xmlsoap.org/soap/http"/>
+		<operation name="payment">
+			<soap12bind:operation style="document"
+					soapAction="http://www.integracia.kz#PaymentServices:payment"/>
+			<input>
+				<soap12bind:body use="literal"/>
+			</input>
+			<output>
+				<soap12bind:body use="literal"/>
+			</output>
+		</operation>
+	</binding>
+	<service name="PaymentServices">
+		<port name="PaymentServicesSoap"
+				binding="tns:PaymentServicesSoapBinding">
+			<documentation> 
+				<wsi:Claim xmlns:wsi="http://ws-i.org/schemas/conformanceClaim/"
+						conformsTo="http://ws-i.org/profiles/basic/1.1"/>
+			</documentation>
+			<soapbind:address location="https://vc.vci.kz/mfo_demo/ws/PaymentServices"/>
+		</port>
+		<port name="PaymentServicesSoap12"
+				binding="tns:PaymentServicesSoap12Binding">
+			<soap12bind:address location="https://vc.vci.kz/mfo_demo/ws/PaymentServices"/>
+		</port>
+	</service>
+</definitions>

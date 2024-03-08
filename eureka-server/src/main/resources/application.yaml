@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: eureka
+
+server:
+  port: 8787
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      defaultZone: http://localhost:8787/eureka/
+    register-with-eureka: false
+    fetch-registry: false
+logging:
+  level:
+    com.netflix.discovery: DEBUG
+    com.netflix.eureka: DEBUG
+
+#logging:
+#  file:
+#    name: @app.logging.path@${spring.application.name}/${spring.application.name}.log
+#  logback:
+#    rollingpolicy:
+#      max-file-size: 100MB
